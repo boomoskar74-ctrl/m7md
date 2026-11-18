@@ -2,9 +2,10 @@
 <html lang="ar" dir="rtl" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#04060B">
     <title>M7MD ALHWITI • ادارة عشوائية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -48,9 +49,11 @@
             color: #F8FAFC;
             font-family: 'Cairo', sans-serif;
             -webkit-tap-highlight-color: transparent;
+            scroll-behavior: smooth;
         }
         @media screen and (max-width: 768px) {
             input, select, textarea { font-size: 16px !important; }
+            body { padding-bottom: 5.5rem !important; }
         }
         input[type="number"]::-webkit-inner-spin-button,
         input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
@@ -77,6 +80,7 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .num-font { font-family: 'JetBrains Mono', monospace; }
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 12px); }
     </style>
 </head>
 <body class="min-h-screen antialiased selection:bg-amber-500/30 selection:text-amber-200 pb-12 grid-bg">
@@ -89,113 +93,112 @@
     </div>
 
     <!-- الشريط العلوي الفاخر (Command Bar) -->
-    <header class="sticky top-0 z-30 border-b border-slate-800/80 bg-obsidian-950/85 backdrop-blur-2xl">
-        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3">
-            <div class="flex flex-wrap items-center justify-between gap-3">
+    <header class="sticky top-0 z-30 border-b border-slate-800/80 bg-obsidian-950/90 backdrop-blur-2xl">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3">
+            <div class="flex flex-wrap items-center justify-between gap-2.5 sm:gap-3">
                 <!-- الهوية والشعار -->
-                <div class="flex items-center gap-3">
-                    <div class="relative flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-600 shadow-lg shadow-amber-500/25 text-obsidian-950 shrink-0">
-                        <i data-lucide="crown" class="w-6 h-6 stroke-[2.5]"></i>
+                <div class="flex items-center gap-2.5 sm:gap-3">
+                    <div class="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-600 shadow-lg shadow-amber-500/25 text-obsidian-950 shrink-0">
+                        <i data-lucide="crown" class="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]"></i>
                     </div>
                     <div>
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <h1 class="text-base sm:text-xl font-black tracking-tight text-white num-font uppercase" dir="ltr">M7MD <span class="text-amber-400">ALHWITI</span></h1>
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold bg-cyan-500/10 text-cyan-300 border border-cyan-400/25 num-font" dir="ltr">
+                        <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                            <h1 class="text-sm sm:text-xl font-black tracking-tight text-white num-font uppercase" dir="ltr">M7MD <span class="text-amber-400">ALHWITI</span></h1>
+                            <span class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-cyan-500/10 text-cyan-300 border border-cyan-400/25 num-font" dir="ltr">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
                                 SPX • SPY • NDX • TSLA • NVDA
                             </span>
                             <!-- مؤشر حالة المزامنة السحابية -->
-                            <span id="cloudSyncBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold bg-amber-500/15 text-amber-300 border border-amber-400/30">
+                            <span id="cloudSyncBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold bg-amber-500/15 text-amber-300 border border-amber-400/30">
                                 <span id="cloudSyncDot" class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                                <span id="cloudSyncText">جاري الاتصال بالسحابة...</span>
+                                <span id="cloudSyncText">جاري الاتصال...</span>
                             </span>
                         </div>
-                        <p class="text-[11px] sm:text-xs text-slate-400 font-semibold mt-0.5">ادارة عشوائية • مزامنة تلقائية بين الأجهزة</p>
+                        <p class="hidden sm:block text-xs text-slate-400 font-semibold mt-0.5">ادارة عشوائية • مزامنة تلقائية بين الأجهزة</p>
                     </div>
                 </div>
 
                 <!-- أزرار التحكم السريعة -->
-                <div class="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto justify-end flex-wrap">
-                    <button onclick="openGoalsModal()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-extrabold rounded-xl bg-amber-500/15 text-amber-300 border border-amber-400/30 hover:bg-amber-500/25 transition-all cursor-pointer">
-                        <i data-lucide="target" class="w-4 h-4 text-amber-400"></i>
+                <div class="flex items-center gap-1.5 sm:gap-2 justify-end">
+                    <button onclick="openGoalsModal()" class="inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-extrabold rounded-xl bg-amber-500/15 text-amber-300 border border-amber-400/30 hover:bg-amber-500/25 transition-all cursor-pointer">
+                        <i data-lucide="target" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400"></i>
                         <span>الأهداف</span>
                     </button>
-                    <button onclick="exportBackupJSON()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 hover:bg-cyan-500/20 transition-all cursor-pointer" title="حفظ نسخة احتياطية">
-                        <i data-lucide="download" class="w-4 h-4 text-cyan-400"></i>
+                    <button onclick="exportBackupJSON()" class="inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-bold rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 hover:bg-cyan-500/20 transition-all cursor-pointer" title="حفظ نسخة احتياطية">
+                        <i data-lucide="download" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400"></i>
                         <span class="hidden sm:inline">نسخة احتياطية</span>
-                        <span class="sm:hidden">حفظ</span>
                     </button>
-                    <button onclick="document.getElementById('restoreFileInput').click()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-purple-500/10 text-purple-300 border border-purple-500/25 hover:bg-purple-500/20 transition-all cursor-pointer" title="استعادة نسخة احتياطية">
+                    <button onclick="document.getElementById('restoreFileInput').click()" class="hidden sm:inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-purple-500/10 text-purple-300 border border-purple-500/25 hover:bg-purple-500/20 transition-all cursor-pointer" title="استعادة نسخة احتياطية">
                         <i data-lucide="upload" class="w-4 h-4 text-purple-400"></i>
-                        <span class="hidden sm:inline">استعادة</span>
+                        <span>استعادة</span>
                     </button>
                     <input type="file" id="restoreFileInput" accept=".json" class="hidden" onchange="importBackupJSON(event)">
-                    <button onclick="exportToCSV()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-obsidian-800 text-slate-200 border border-slate-700/80 hover:bg-obsidian-700 transition-all cursor-pointer" title="تصدير Excel">
-                        <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i>
-                        <span>Excel</span>
+                    <button onclick="exportToCSV()" class="inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-bold rounded-xl bg-obsidian-800 text-slate-200 border border-slate-700/80 hover:bg-obsidian-700 transition-all cursor-pointer" title="تصدير Excel">
+                        <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400"></i>
+                        <span class="hidden sm:inline">Excel</span>
                     </button>
-                    <button onclick="confirmClearAll()" class="inline-flex items-center justify-center p-2 text-xs font-bold rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/25 hover:bg-rose-500/20 transition-all cursor-pointer" title="تصفير السجل">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    <button onclick="confirmClearAll()" class="inline-flex items-center justify-center p-1.5 sm:p-2 text-xs font-bold rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/25 hover:bg-rose-500/20 transition-all cursor-pointer" title="تصفير السجل">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     </button>
                 </div>
             </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-5 space-y-6">
+    <main id="section-home" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-5 space-y-5 sm:space-y-6">
 
-        <!-- 1. لوحة المؤشرات التنفيذية (5 بطاقات احترافية) -->
-        <section class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-            <!-- رأس المال الأساسي -->
-            <div class="cyber-panel rounded-2xl p-4 relative overflow-hidden">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-[11px] font-bold text-slate-400">رأس المال الأساسي</span>
-                    <i data-lucide="wallet" class="w-4 h-4 text-cyan-400"></i>
-                </div>
-                <div class="relative flex items-center mt-1">
-                    <span class="text-base font-black text-amber-400 ml-1 num-font">$</span>
-                    <input type="number" id="initialCapitalInput" inputmode="decimal" min="0" step="100" value="25000"
-                        onchange="handleCapitalChange(this.value)" oninput="handleCapitalChange(this.value)"
-                        class="w-full bg-obsidian-950/90 border border-slate-700/80 focus:border-amber-400 rounded-xl px-2.5 py-1.5 text-base sm:text-lg font-extrabold text-white num-font outline-none transition-all" dir="ltr">
-                </div>
-                <div class="text-[10px] text-slate-500 mt-1.5 font-semibold">قابل للتعديل الفوري</div>
-            </div>
-
-            <!-- الرصيد الإجمالي الحالي -->
-            <div class="cyber-panel-gold rounded-2xl p-4 relative overflow-hidden">
-                <div class="flex items-center justify-between mb-2">
+        <!-- 1. لوحة المؤشرات التنفيذية (متجاوبة تلقائياً: 2x2 في الجوال، 5 أعمدة في الكمبيوتر) -->
+        <section class="grid grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-4">
+            <!-- الرصيد الإجمالي الحالي (يظهر أولاً في الجوال لأهميته) -->
+            <div class="order-1 lg:order-2 cyber-panel-gold rounded-2xl p-3.5 sm:p-4 relative overflow-hidden">
+                <div class="flex items-center justify-between mb-1.5 sm:mb-2">
                     <span class="text-[11px] font-extrabold text-amber-300">الرصيد الإجمالي</span>
                     <i data-lucide="landmark" class="w-4 h-4 text-amber-400"></i>
                 </div>
-                <div id="kpiCurrentBalance" class="text-lg sm:text-2xl font-black text-white num-font tracking-tight mt-1 truncate" dir="ltr">$25,000.00</div>
+                <div id="kpiCurrentBalance" class="text-base sm:text-2xl font-black text-white num-font tracking-tight mt-1 truncate" dir="ltr">$25,000.00</div>
                 <div class="flex items-center justify-between mt-2 text-[10px]">
-                    <span class="text-slate-400">النمو الكلي:</span>
+                    <span class="text-slate-400">النمو:</span>
                     <span id="kpiRoiBadge" class="font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 num-font" dir="ltr">+0.00%</span>
                 </div>
             </div>
 
             <!-- صافي الربح / الخسارة -->
-            <div class="cyber-panel rounded-2xl p-4 relative overflow-hidden">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-[11px] font-bold text-slate-400">صافي الربح / الخسارة</span>
+            <div class="order-2 lg:order-3 cyber-panel rounded-2xl p-3.5 sm:p-4 relative overflow-hidden">
+                <div class="flex items-center justify-between mb-1.5 sm:mb-2">
+                    <span class="text-[11px] font-bold text-slate-400">صافي الربح</span>
                     <div id="kpiNetIconBox" class="text-emerald-400"><i data-lucide="trending-up" class="w-4 h-4"></i></div>
                 </div>
-                <div id="kpiNetProfit" class="text-lg sm:text-2xl font-black text-emerald-400 num-font tracking-tight mt-1 truncate" dir="ltr">+$0.00</div>
+                <div id="kpiNetProfit" class="text-base sm:text-2xl font-black text-emerald-400 num-font tracking-tight mt-1 truncate" dir="ltr">+$0.00</div>
                 <div class="flex items-center justify-between mt-2 text-[10px] text-slate-400">
                     <span>العمولات:</span>
                     <span id="kpiTotalComm" class="text-amber-400 font-bold num-font" dir="ltr">-$0.00</span>
                 </div>
             </div>
 
+            <!-- رأس المال الأساسي -->
+            <div class="order-3 lg:order-1 cyber-panel rounded-2xl p-3.5 sm:p-4 relative overflow-hidden">
+                <div class="flex items-center justify-between mb-1.5 sm:mb-2">
+                    <span class="text-[11px] font-bold text-slate-400">رأس المال</span>
+                    <i data-lucide="wallet" class="w-4 h-4 text-cyan-400"></i>
+                </div>
+                <div class="relative flex items-center mt-1">
+                    <span class="text-sm sm:text-base font-black text-amber-400 ml-1 num-font">$</span>
+                    <input type="number" id="initialCapitalInput" inputmode="decimal" min="0" step="100" value="25000"
+                        onchange="handleCapitalChange(this.value)" oninput="handleCapitalChange(this.value)"
+                        class="w-full bg-obsidian-950/90 border border-slate-700/80 focus:border-amber-400 rounded-xl px-2 py-1 sm:px-2.5 sm:py-1.5 text-sm sm:text-lg font-extrabold text-white num-font outline-none transition-all" dir="ltr">
+                </div>
+                <div class="text-[10px] text-slate-500 mt-1.5 font-semibold hidden sm:block">قابل للتعديل الفوري</div>
+            </div>
+
             <!-- نسبة النجاح -->
-            <div class="cyber-panel rounded-2xl p-4 relative overflow-hidden">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-[11px] font-bold text-slate-400">دقة الصفقات (Win Rate)</span>
+            <div class="order-4 lg:order-4 cyber-panel rounded-2xl p-3.5 sm:p-4 relative overflow-hidden">
+                <div class="flex items-center justify-between mb-1.5 sm:mb-2">
+                    <span class="text-[11px] font-bold text-slate-400">دقة الصفقات</span>
                     <i data-lucide="crosshair" class="w-4 h-4 text-purple-400"></i>
                 </div>
-                <div class="flex items-baseline gap-2 mt-1">
-                    <span id="kpiWinRate" class="text-lg sm:text-2xl font-black text-white num-font">0%</span>
-                    <span id="kpiWinLossCount" class="text-[11px] font-bold text-slate-400 num-font" dir="ltr">(0W / 0L)</span>
+                <div class="flex items-baseline gap-1.5 sm:gap-2 mt-1">
+                    <span id="kpiWinRate" class="text-base sm:text-2xl font-black text-white num-font">0%</span>
+                    <span id="kpiWinLossCount" class="text-[10px] sm:text-[11px] font-bold text-slate-400 num-font" dir="ltr">(0W/0L)</span>
                 </div>
                 <div class="w-full bg-obsidian-950 h-1.5 rounded-full mt-2.5 overflow-hidden border border-slate-800">
                     <div id="kpiWinRateBar" class="bg-gradient-to-r from-emerald-500 to-cyan-400 h-full transition-all duration-500" style="width: 0%"></div>
@@ -203,20 +206,22 @@
             </div>
 
             <!-- أقوى عقد / أفضل صفقة -->
-            <div class="col-span-2 lg:col-span-1 cyber-panel rounded-2xl p-4 relative overflow-hidden">
-                <div class="flex items-center justify-between mb-2">
+            <div class="order-5 col-span-2 lg:col-span-1 cyber-panel rounded-2xl p-3.5 sm:p-4 relative overflow-hidden">
+                <div class="flex items-center justify-between mb-1 sm:mb-2">
                     <span class="text-[11px] font-bold text-slate-400">أقوى صفقة محققة</span>
                     <i data-lucide="flame" class="w-4 h-4 text-orange-400"></i>
                 </div>
-                <div id="kpiBestTrade" class="text-lg sm:text-xl font-black text-amber-300 num-font mt-1 truncate" dir="ltr">+$0.00</div>
-                <div id="kpiBestTradeMeta" class="text-[10px] text-slate-400 mt-2 font-semibold truncate">بانتظار تسجيل الصفقات</div>
+                <div class="flex items-baseline justify-between lg:block">
+                    <div id="kpiBestTrade" class="text-base sm:text-xl font-black text-amber-300 num-font mt-0.5 truncate" dir="ltr">+$0.00</div>
+                    <div id="kpiBestTradeMeta" class="text-[10px] text-slate-400 lg:mt-2 font-semibold truncate">بانتظار تسجيل الصفقات</div>
+                </div>
             </div>
         </section>
 
         <!-- 2. شريط هدف المحفظة الذكي + شريط أداء الشركات -->
-        <section class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-4">
             <!-- شريط التقدم نحو الهدف -->
-            <div class="lg:col-span-5 cyber-panel rounded-2xl p-4 flex flex-col justify-between">
+            <div class="lg:col-span-5 cyber-panel rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between">
                 <div class="flex items-center justify-between gap-2 mb-2">
                     <div class="flex items-center gap-2">
                         <span class="p-1.5 rounded-lg bg-amber-500/15 text-amber-400"><i data-lucide="trophy" class="w-4 h-4"></i></span>
@@ -227,7 +232,7 @@
                     </div>
                     <span id="goalPercentBadge" class="text-xs font-black px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-400/30 num-font">0%</span>
                 </div>
-                <div class="space-y-1.5 mt-2">
+                <div class="space-y-1.5 mt-1.5">
                     <div class="w-full h-2.5 bg-obsidian-950 rounded-full overflow-hidden border border-slate-800 p-0.5">
                         <div id="goalProgressBar" class="h-full rounded-full bg-gradient-to-r from-amber-500 via-yellow-400 to-emerald-400 transition-all duration-500" style="width: 0%"></div>
                     </div>
@@ -238,38 +243,38 @@
                 </div>
             </div>
 
-            <!-- بطاقات أداء المؤشرات والشركات (Ticker Scoreboard) -->
-            <div class="lg:col-span-7 cyber-panel rounded-2xl p-4">
+            <!-- بطاقات أداء المؤشرات والشركات (شريط أفقي قابل للتمرير في الجوال، وشبكة 5 أعمدة في الكمبيوتر) -->
+            <div class="lg:col-span-7 cyber-panel rounded-2xl p-3.5 sm:p-4">
                 <div class="flex items-center justify-between mb-2.5">
                     <span class="text-xs font-extrabold text-slate-300 flex items-center gap-1.5">
                         <i data-lucide="bar-chart-3" class="w-4 h-4 text-cyan-400"></i>
-                        <span>أداء المؤشرات والشركات (اضغط للتصفية)</span>
+                        <span>أداء المؤشرات والشركات</span>
                     </span>
                     <button onclick="setSymbolFilter('ALL')" class="text-[11px] font-bold text-cyan-400 hover:text-cyan-300 cursor-pointer">عرض الكل</button>
                 </div>
-                <div id="tickerScoreboard" class="grid grid-cols-2 sm:grid-cols-5 gap-2"></div>
+                <div id="tickerScoreboard" class="flex sm:grid sm:grid-cols-5 gap-2 overflow-x-auto no-scrollbar pb-0.5"></div>
             </div>
         </section>
 
         <!-- 3. منصة إدخال الصفقة السريعة (Quick Execution Deck) -->
-        <section class="cyber-panel rounded-2xl p-4 sm:p-5 border-emerald-500/25">
-            <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-800/80">
+        <section id="section-add" class="cyber-panel rounded-2xl p-3.5 sm:p-5 border-emerald-500/25 scroll-mt-16">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3.5 sm:mb-4 pb-2.5 sm:pb-3 border-b border-slate-800/80">
                 <div class="flex items-center gap-2">
                     <div class="p-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
                         <i data-lucide="zap" class="w-4 h-4"></i>
                     </div>
                     <h3 class="text-sm sm:text-base font-black text-white">تسجيل صفقة جديدة</h3>
-                    <span id="addingToMonthBadge" class="inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-cyan-500/10 text-cyan-300 border border-cyan-500/25">نوفمبر 2026</span>
+                    <span id="addingToMonthBadge" class="inline-block text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-lg bg-cyan-500/10 text-cyan-300 border border-cyan-500/25">نوفمبر 2026</span>
                 </div>
-                <div class="flex items-center gap-2">
-                    <span id="headerFeeBadge" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/25 num-font" dir="ltr">Fee: $4.85 / عقد</span>
-                    <div id="livePreviewStatus" class="text-xs font-extrabold px-3 py-1 rounded-lg bg-slate-800/90 text-slate-400">بانتظار السعر</div>
+                <div class="flex items-center gap-1.5 sm:gap-2">
+                    <span id="headerFeeBadge" class="text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/25 num-font" dir="ltr">Fee: $4.85</span>
+                    <div id="livePreviewStatus" class="text-[11px] sm:text-xs font-extrabold px-2.5 py-1 rounded-lg bg-slate-800/90 text-slate-400">بانتظار السعر</div>
                 </div>
             </div>
 
-            <form id="tradeForm" onsubmit="addTrade(event)" class="space-y-4">
+            <form id="tradeForm" onsubmit="addTrade(event)" class="space-y-3.5 sm:space-y-4">
                 <!-- الصف الأول: المؤشر + التاريخ (الشهر واليوم) + نوع العقد -->
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-3.5">
                     <!-- الشركة / المؤشر -->
                     <div class="md:col-span-3">
                         <label class="flex items-center gap-1.5 text-xs font-bold text-slate-300 mb-1.5">
@@ -297,12 +302,12 @@
                         <div class="grid grid-cols-12 gap-2 p-1 bg-obsidian-950 border border-slate-700/90 rounded-xl">
                             <div class="col-span-7 relative">
                                 <select id="tradeMonthSelect" onchange="syncFormMonthToFilter(this.value)"
-                                    class="w-full h-9 px-3 bg-obsidian-900/90 hover:bg-obsidian-800 border border-slate-800 rounded-lg text-xs sm:text-sm font-extrabold text-blue-300 focus:outline-none focus:border-blue-400 transition-colors cursor-pointer">
+                                    class="w-full h-9 px-2.5 sm:px-3 bg-obsidian-900/90 hover:bg-obsidian-800 border border-slate-800 rounded-lg text-xs sm:text-sm font-extrabold text-blue-300 focus:outline-none focus:border-blue-400 transition-colors cursor-pointer">
                                 </select>
                             </div>
                             <div class="col-span-5 relative">
                                 <select id="tradeDaySelect"
-                                    class="w-full h-9 px-2.5 bg-obsidian-900/90 hover:bg-obsidian-800 border border-slate-800 rounded-lg text-xs sm:text-sm font-extrabold text-amber-300 text-center focus:outline-none focus:border-amber-400 transition-colors cursor-pointer">
+                                    class="w-full h-9 px-2 sm:px-2.5 bg-obsidian-900/90 hover:bg-obsidian-800 border border-slate-800 rounded-lg text-xs sm:text-sm font-extrabold text-amber-300 text-center focus:outline-none focus:border-amber-400 transition-colors cursor-pointer">
                                 </select>
                             </div>
                         </div>
@@ -314,14 +319,14 @@
                             <i data-lucide="arrow-left-right" class="w-3.5 h-3.5 text-emerald-400"></i>
                             <span>نوع العقد</span>
                         </label>
-                        <div class="grid grid-cols-2 gap-2 h-11">
+                        <div class="grid grid-cols-2 gap-2.5 h-12 sm:h-11">
                             <button type="button" id="btnCall" onclick="selectTradeType('CALL')"
-                                class="flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-xs sm:text-sm transition-all cursor-pointer border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-md shadow-emerald-500/10">
+                                class="flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-sm transition-all cursor-pointer border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-md shadow-emerald-500/10">
                                 <i data-lucide="trending-up" class="w-4 h-4"></i>
                                 <span>CALL</span>
                             </button>
                             <button type="button" id="btnPut" onclick="selectTradeType('PUT')"
-                                class="flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-xs sm:text-sm transition-all cursor-pointer border-slate-700/80 bg-obsidian-950 text-slate-400 hover:text-slate-200">
+                                class="flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-sm transition-all cursor-pointer border-slate-700/80 bg-obsidian-950 text-slate-400 hover:text-slate-200">
                                 <i data-lucide="trending-down" class="w-4 h-4"></i>
                                 <span>PUT</span>
                             </button>
@@ -332,49 +337,49 @@
 
                 <!-- الصف الثاني: عدد العقود + سعر الشراء + سعر البيع + العمولة + الملاحظة + زر التسجيل -->
                 <div class="grid grid-cols-2 sm:grid-cols-12 gap-3 items-end pt-1">
-                    <!-- عدد العقود (افتراضي 1) -->
-                    <div class="col-span-2 sm:col-span-2">
+                    <!-- عدد العقود -->
+                    <div class="col-span-1 sm:col-span-2">
                         <label class="block text-xs font-bold text-cyan-300 mb-1.5">عدد العقود</label>
                         <div class="flex items-center h-11 bg-obsidian-950 border border-cyan-500/40 rounded-xl overflow-hidden">
                             <button type="button" onclick="adjustContracts('contractsInput', -1)"
-                                class="w-9 h-full flex items-center justify-center text-slate-300 hover:bg-slate-800 hover:text-white font-black text-base cursor-pointer select-none">−</button>
+                                class="w-10 sm:w-9 h-full flex items-center justify-center text-slate-300 hover:bg-slate-800 active:bg-slate-700 font-black text-lg cursor-pointer select-none">−</button>
                             <input type="number" id="contractsInput" inputmode="numeric" step="1" min="1" value="1" required oninput="updateLivePreview()"
                                 class="w-full h-full bg-transparent text-center text-sm font-black text-cyan-300 num-font focus:outline-none" dir="ltr">
                             <button type="button" onclick="adjustContracts('contractsInput', 1)"
-                                class="w-9 h-full flex items-center justify-center text-slate-300 hover:bg-slate-800 hover:text-white font-black text-base cursor-pointer select-none">+</button>
+                                class="w-10 sm:w-9 h-full flex items-center justify-center text-slate-300 hover:bg-slate-800 active:bg-slate-700 font-black text-lg cursor-pointer select-none">+</button>
                         </div>
                     </div>
 
+                    <!-- العمولة المتضاعفة -->
+                    <div class="col-span-1 sm:col-span-1 sm:order-4">
+                        <label class="block text-xs font-bold text-slate-300 mb-1.5">العمولة ($)</label>
+                        <input type="text" id="commissionInput" value="4.85" readonly
+                            class="w-full h-11 px-1.5 bg-obsidian-900/90 border border-amber-500/30 rounded-xl text-xs font-extrabold text-amber-300 num-font text-center cursor-not-allowed select-none" dir="ltr" title="4.85$ لكل عقد">
+                    </div>
+
                     <!-- سعر الشراء -->
-                    <div class="col-span-1 sm:col-span-2">
+                    <div class="col-span-1 sm:col-span-2 sm:order-2">
                         <label class="block text-xs font-bold text-slate-300 mb-1.5">سعر الشراء ($)</label>
                         <input type="number" id="buyPriceInput" inputmode="decimal" step="any" min="0" required placeholder="0.00" oninput="updateLivePreview()"
                             class="w-full h-11 px-3 bg-obsidian-950 border border-slate-700/90 rounded-xl text-sm font-extrabold text-white num-font placeholder-slate-600 focus:outline-none focus:border-emerald-400" dir="ltr">
                     </div>
 
                     <!-- سعر البيع -->
-                    <div class="col-span-1 sm:col-span-2">
+                    <div class="col-span-1 sm:col-span-2 sm:order-3">
                         <label class="block text-xs font-bold text-slate-300 mb-1.5">سعر البيع ($)</label>
                         <input type="number" id="sellPriceInput" inputmode="decimal" step="any" min="0" required placeholder="0.00" oninput="updateLivePreview()"
                             class="w-full h-11 px-3 bg-obsidian-950 border border-slate-700/90 rounded-xl text-sm font-extrabold text-white num-font placeholder-slate-600 focus:outline-none focus:border-emerald-400" dir="ltr">
                     </div>
 
-                    <!-- العمولة المتضاعفة مع العقود (4.85 لكل عقد) -->
-                    <div class="col-span-1 sm:col-span-1">
-                        <label class="block text-xs font-bold text-slate-300 mb-1.5">العمولة</label>
-                        <input type="text" id="commissionInput" value="4.85" readonly
-                            class="w-full h-11 px-1.5 bg-obsidian-900/90 border border-amber-500/30 rounded-xl text-xs font-extrabold text-amber-300 num-font text-center cursor-not-allowed select-none" dir="ltr" title="4.85$ لكل عقد">
-                    </div>
-
                     <!-- خانة كتابة الملاحظة -->
-                    <div class="col-span-1 sm:col-span-2">
+                    <div class="col-span-2 sm:col-span-2 sm:order-5">
                         <label class="block text-xs font-bold text-slate-300 mb-1.5">ملاحظة الصفقة</label>
                         <input type="text" id="tradeNoteInput" placeholder="ملاحظتك..."
                             class="w-full h-11 px-3 bg-obsidian-950 border border-slate-700/90 rounded-xl text-xs sm:text-sm font-bold text-purple-200 placeholder-slate-500 focus:outline-none focus:border-purple-400">
                     </div>
 
                     <!-- المعاينة وزر التنفيذ -->
-                    <div class="col-span-2 sm:col-span-3 flex items-stretch gap-2 h-11">
+                    <div class="col-span-2 sm:col-span-3 sm:order-6 flex items-stretch gap-2 h-12 sm:h-11">
                         <div id="livePreviewBox" class="flex-1 px-3 py-1 rounded-xl bg-obsidian-950 border border-slate-800 flex flex-col justify-center min-w-[95px]">
                             <div class="flex items-center justify-between text-[10px] text-slate-400">
                                 <span>الصافي</span>
@@ -383,7 +388,7 @@
                             <span id="livePreviewAmount" class="text-sm font-black text-slate-300 num-font truncate" dir="ltr">$0.00</span>
                         </div>
                         <button type="submit"
-                            class="px-5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 active:scale-95 text-obsidian-950 font-black text-xs sm:text-sm rounded-xl shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0">
+                            class="px-6 sm:px-5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 active:scale-95 text-obsidian-950 font-black text-sm rounded-xl shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0">
                             <i data-lucide="plus" class="w-4 h-4 stroke-[3]"></i>
                             <span>تسجيل</span>
                         </button>
@@ -393,9 +398,9 @@
         </section>
 
         <!-- 4. سجل الصفقات وتقويم الشهور والأيام -->
-        <section class="cyber-panel rounded-2xl overflow-hidden">
+        <section id="section-history" class="cyber-panel rounded-2xl overflow-hidden scroll-mt-16">
             <!-- شريط الشهور والأيام -->
-            <div class="bg-obsidian-950/90 border-b border-slate-800 px-3 sm:px-5 py-4 space-y-3">
+            <div class="bg-obsidian-950/90 border-b border-slate-800 px-3 sm:px-5 py-3.5 sm:py-4 space-y-3">
                 <div class="flex items-center justify-between gap-2">
                     <span class="text-xs font-extrabold text-slate-200 flex items-center gap-1.5">
                         <i data-lucide="calendar-days" class="w-4 h-4 text-amber-400"></i>
@@ -410,7 +415,7 @@
             </div>
 
             <!-- شريط أدوات الجدول -->
-            <div class="p-4 sm:p-5 border-b border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="p-3.5 sm:p-5 border-b border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
                 <div class="flex items-center gap-2.5">
                     <div class="p-2 rounded-xl bg-cyan-500/15 border border-cyan-500/25 text-cyan-400 shrink-0">
                         <i data-lucide="list-ordered" class="w-5 h-5"></i>
@@ -420,12 +425,12 @@
                             <h3 class="text-sm sm:text-lg font-black text-white" id="tableMonthTitle">سجل الصفقات</h3>
                             <span id="monthNetSummaryBadge" class="text-xs font-black px-2.5 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 num-font" dir="ltr">+$0.00</span>
                         </div>
-                        <p class="text-[11px] text-slate-400 mt-0.5">شامل عدد العقود وتفاصيل الدخول والخروج وإمكانية التعديل وصافي الربح بعد خصم العمولة ($4.85 لكل عقد)</p>
+                        <p class="hidden sm:block text-[11px] text-slate-400 mt-0.5">شامل عدد العقود وتفاصيل الدخول والخروج وإمكانية التعديل وصافي الربح بعد خصم العمولة ($4.85 لكل عقد)</p>
                     </div>
                 </div>
 
                 <!-- الفلاتر -->
-                <div class="flex flex-wrap items-center gap-2">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                     <select id="symbolFilterSelect" onchange="setSymbolFilter(this.value)"
                         class="px-3 py-2 bg-obsidian-950 border border-slate-800 rounded-xl text-xs font-bold text-cyan-300 focus:outline-none cursor-pointer">
                         <option value="ALL">كل الشركات (الكل)</option>
@@ -446,9 +451,9 @@
                 </div>
             </div>
 
-            <!-- بطاقات الجوال -->
+            <!-- بطاقات الجوال (تظهر في الجوال فقط) -->
             <div id="mobileTradesContainer" class="md:hidden divide-y divide-slate-800/70"></div>
-            <div id="mobileSummaryFooter" class="md:hidden bg-obsidian-950 border-t-2 border-amber-500/30 p-4 space-y-2 text-xs">
+            <div id="mobileSummaryFooter" class="md:hidden bg-obsidian-950 border-t-2 border-amber-500/30 p-3.5 space-y-2 text-xs">
                 <div class="flex items-center justify-between">
                     <span class="text-amber-400 font-extrabold" id="mobileFootLabel">مجموع الفترة:</span>
                     <span id="mobileFootCount" class="bg-amber-500/15 text-amber-300 px-2.5 py-0.5 rounded-lg font-bold">0 صفقات</span>
@@ -460,7 +465,7 @@
                 </div>
             </div>
 
-            <!-- جدول الكمبيوتر -->
+            <!-- جدول الكمبيوتر (يظهر في الكمبيوتر فقط) -->
             <div class="hidden md:block overflow-x-auto">
                 <table class="w-full text-right border-collapse">
                     <thead>
@@ -510,7 +515,7 @@
         </section>
 
         <!-- 5. ملخص الأداء اليومي المنفصل (بالدولار والريال السعودي وعدد ونوع الصفقات) -->
-        <section class="cyber-panel rounded-2xl p-4 sm:p-5 border-amber-500/25 space-y-4">
+        <section class="cyber-panel rounded-2xl p-3.5 sm:p-5 border-amber-500/25 space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
                 <div class="flex items-center gap-2.5">
                     <div class="p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 shrink-0">
@@ -524,13 +529,13 @@
                                 عرض ملخص كل الأيام
                             </button>
                         </div>
-                        <p class="text-[11px] text-slate-400 mt-0.5">بطاقة مستقلة لكل يوم تداول تعرض صافي المكسب بالدولار والريال السعودي وعدد الصفقات ونوعها</p>
+                        <p class="hidden sm:block text-[11px] text-slate-400 mt-0.5">بطاقة مستقلة لكل يوم تداول تعرض صافي المكسب بالدولار والريال السعودي وعدد الصفقات ونوعها</p>
                     </div>
                 </div>
 
                 <!-- التحكم بسعر صرف الدولار مقابل الريال السعودي -->
                 <div class="flex items-center gap-2 bg-obsidian-950/90 px-3 py-1.5 rounded-xl border border-slate-800">
-                    <span class="text-[11px] font-bold text-slate-400">سعر الصرف:</span>
+                    <span class="text-[11px] font-bold text-slate-400">الصرف:</span>
                     <span class="text-xs font-extrabold text-amber-300 num-font" dir="ltr">1$ =</span>
                     <input type="number" id="sarRateInput" inputmode="decimal" step="0.01" min="0.1" value="3.75"
                         onchange="handleSarRateChange(this.value)" oninput="handleSarRateChange(this.value)"
@@ -540,7 +545,7 @@
             </div>
 
             <!-- شبكة بطاقات الأيام -->
-            <div id="dailyBreakdownGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+            <div id="dailyBreakdownGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-3.5"></div>
 
             <!-- حالة عدم وجود أيام -->
             <div id="emptyDailyBreakdown" class="hidden py-8 text-center">
@@ -549,9 +554,9 @@
         </section>
 
         <!-- 6. قسم التحليلات والرسوم البيانية المتقدمة -->
-        <section class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
+        <section id="section-analytics" class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 scroll-mt-16">
             <!-- منحنى نمو المحفظة -->
-            <div class="lg:col-span-8 cyber-panel rounded-2xl p-4 sm:p-5 flex flex-col justify-between">
+            <div class="lg:col-span-8 cyber-panel rounded-2xl p-3.5 sm:p-5 flex flex-col justify-between">
                 <div class="flex items-center justify-between gap-2 mb-3">
                     <div class="flex items-center gap-2">
                         <span class="p-1.5 rounded-lg bg-cyan-500/15 text-cyan-400"><i data-lucide="line-chart" class="w-4 h-4"></i></span>
@@ -559,13 +564,13 @@
                     </div>
                     <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">تراكمي لحظي</span>
                 </div>
-                <div class="relative w-full h-56 sm:h-64">
+                <div class="relative w-full h-52 sm:h-64">
                     <canvas id="equityChart"></canvas>
                 </div>
             </div>
 
             <!-- تحليل CALL مقابل PUT -->
-            <div class="lg:col-span-4 cyber-panel rounded-2xl p-4 sm:p-5 flex flex-col justify-between">
+            <div class="lg:col-span-4 cyber-panel rounded-2xl p-3.5 sm:p-5 flex flex-col justify-between">
                 <div class="flex items-center gap-2 mb-3">
                     <span class="p-1.5 rounded-lg bg-purple-500/15 text-purple-400"><i data-lucide="pie-chart" class="w-4 h-4"></i></span>
                     <h3 class="text-sm sm:text-base font-extrabold text-white">توازن العقود (CALL vs PUT)</h3>
@@ -593,7 +598,7 @@
         </section>
 
         <!-- 7. ملخص الأداء المتقدم وإدارة المخاطر (Risk & Discipline Summary) -->
-        <section class="cyber-panel-gold rounded-2xl p-4 sm:p-5 space-y-4">
+        <section class="cyber-panel-gold rounded-2xl p-3.5 sm:p-5 space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-800/80">
                 <div class="flex items-center gap-2.5">
                     <div class="p-2 rounded-xl bg-amber-500/15 border border-amber-400/30 text-amber-400">
@@ -601,14 +606,14 @@
                     </div>
                     <div>
                         <h3 class="text-sm sm:text-base font-black text-white">ملخص الأداء المتقدم وإدارة المخاطر</h3>
-                        <p class="text-[11px] text-slate-400">مؤشرات جودة التداول والانضباط المالي المحسوبة تلقائياً من جميع صفقاتك</p>
+                        <p class="hidden sm:block text-[11px] text-slate-400">مؤشرات جودة التداول والانضباط المالي المحسوبة تلقائياً من جميع صفقاتك</p>
                     </div>
                 </div>
-                <span id="riskTotalContractsBadge" class="text-xs font-extrabold px-3 py-1 rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 num-font">إجمالي العقود المتداولة: 0</span>
+                <span id="riskTotalContractsBadge" class="text-xs font-extrabold px-3 py-1 rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 num-font">إجمالي العقود: 0</span>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-                <!-- البطاقة 1: معامل الربحية (Profit Factor) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3.5">
+                <!-- البطاقة 1: معامل الربحية -->
                 <div class="bg-obsidian-950/90 border border-slate-800/90 rounded-2xl p-4 flex flex-col justify-between">
                     <div>
                         <div class="flex items-center justify-between mb-2">
@@ -653,7 +658,7 @@
                     </div>
                 </div>
 
-                <!-- البطاقة 3: أقسى تراجع للمحفظة + السلاسل المتتالية -->
+                <!-- البطاقة 3: أقسى تراجع للمحفظة -->
                 <div class="bg-obsidian-950/90 border border-slate-800/90 rounded-2xl p-4 flex flex-col justify-between">
                     <div>
                         <div class="flex items-center justify-between mb-2">
@@ -677,7 +682,7 @@
                     </div>
                 </div>
 
-                <!-- البطاقة 4: أفضل يوم vs أسوأ يوم + أثر العمولات -->
+                <!-- البطاقة 4: أفضل يوم vs أسوأ يوم -->
                 <div class="bg-obsidian-950/90 border border-slate-800/90 rounded-2xl p-4 flex flex-col justify-between">
                     <div>
                         <div class="flex items-center justify-between mb-2">
@@ -703,6 +708,28 @@
             </div>
         </section>
     </main>
+
+    <!-- شريط تنقل سفلي مخصص للجوال فقط (يختفي تماماً في الكمبيوتر) -->
+    <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-obsidian-950/95 backdrop-blur-2xl border-t border-slate-800/90 safe-bottom shadow-2xl">
+        <div class="grid grid-cols-4 h-14">
+            <a href="#section-home" class="flex flex-col items-center justify-center gap-0.5 text-amber-400 active:scale-95 transition-transform">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                <span class="text-[10px] font-extrabold">الرئيسية</span>
+            </a>
+            <a href="#section-add" class="flex flex-col items-center justify-center gap-0.5 text-emerald-400 active:scale-95 transition-transform">
+                <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                <span class="text-[10px] font-extrabold">صفقة جديدة</span>
+            </a>
+            <a href="#section-history" class="flex flex-col items-center justify-center gap-0.5 text-cyan-400 active:scale-95 transition-transform">
+                <i data-lucide="list-ordered" class="w-5 h-5"></i>
+                <span class="text-[10px] font-extrabold">السجل</span>
+            </a>
+            <a href="#section-analytics" class="flex flex-col items-center justify-center gap-0.5 text-purple-400 active:scale-95 transition-transform">
+                <i data-lucide="pie-chart" class="w-5 h-5"></i>
+                <span class="text-[10px] font-extrabold">التحليلات</span>
+            </a>
+        </div>
+    </nav>
 
     <!-- نافذة تعديل الصفقة المتكاملة (Edit Trade Modal) -->
     <div id="editTradeModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
@@ -864,7 +891,7 @@
     </div>
 
     <!-- إشعار منبثق -->
-    <div id="toast" class="fixed bottom-4 left-4 right-4 sm:right-auto sm:left-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+    <div id="toast" class="fixed bottom-16 md:bottom-5 left-4 right-4 sm:right-auto sm:left-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
         <div class="flex items-center justify-center sm:justify-start gap-2.5 bg-obsidian-850 border border-amber-500/40 text-white px-4 py-3 rounded-xl shadow-2xl text-xs sm:text-sm font-bold">
             <i data-lucide="sparkles" class="w-4 h-4 text-amber-400 shrink-0"></i>
             <span id="toastMessage">تم الحفظ</span>
@@ -897,18 +924,17 @@
             if (!badge || !dot || !label) return;
             label.textContent = text;
             if (status === 'connected') {
-                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold bg-emerald-500/15 text-emerald-300 border border-emerald-400/30';
+                badge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold bg-emerald-500/15 text-emerald-300 border border-emerald-400/30';
                 dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400';
             } else if (status === 'syncing') {
-                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold bg-amber-500/15 text-amber-300 border border-amber-400/30';
+                badge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold bg-amber-500/15 text-amber-300 border border-amber-400/30';
                 dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping';
             } else {
-                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold bg-rose-500/15 text-rose-300 border border-rose-400/30';
+                badge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold bg-rose-500/15 text-rose-300 border border-rose-400/30';
                 dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-400';
             }
         }
 
-        // دالة الحفظ السحابي والمحلي معاً
         window.saveToCloud = async function(stateObj) {
             try {
                 updateSyncStatusUI('syncing', 'جاري المزامنة...');
@@ -919,35 +945,32 @@
                     trades: Array.isArray(stateObj.trades) ? stateObj.trades : [],
                     updatedAt: Date.now()
                 });
-                updateSyncStatusUI('connected', 'متصل ومحدّث تلقائياً');
+                updateSyncStatusUI('connected', 'متصل ومحدّث');
             } catch (err) {
                 console.error("Firebase Sync Error:", err);
-                updateSyncStatusUI('error', 'وضع غير متصل (محلي)');
+                updateSyncStatusUI('error', 'وضع محلي');
             }
         };
 
-        // الاستماع اللحظي لأي تحديث من أي جهاز آخر
         onSnapshot(portfolioDocRef, (docSnap) => {
             if (docSnap.exists()) {
                 const cloudData = docSnap.data();
                 if (typeof window.applyRemoteState === 'function') {
                     window.applyRemoteState(cloudData);
                 }
-                updateSyncStatusUI('connected', 'متصل ومحدّث تلقائياً');
+                updateSyncStatusUI('connected', 'متصل ومحدّث');
             } else {
-                // أول تشغيل: رفع البيانات المحلية الحالية للسحابة إن وجدت
                 if (window.appState) {
                     window.saveToCloud(window.appState);
                 }
             }
         }, (error) => {
             console.error("Snapshot listener error:", error);
-            updateSyncStatusUI('error', 'تعذر الاتصال بالسحابة');
+            updateSyncStatusUI('error', 'تعذر الاتصال');
         });
     </script>
 
     <script>
-        // عمولة العقد الواحد = 4.85$ وتتضاعف مع كل عقد إضافي
         const COMMISSION_PER_CONTRACT = 4.85;
         const LOCAL_STORAGE_KEY = 'm7md_alhawiti_options_v1';
         const LEGACY_KEYS = ['apex_options_portfolio_v3', 'options_portfolio_tracker_v2'];
@@ -1064,7 +1087,6 @@
             }
         }
 
-        // استقبال البيانات اللحظية من السحابة وتحديث الشاشة فوراً
         window.applyRemoteState = function(cloudData) {
             window.appState = {
                 initialCapital: typeof cloudData.initialCapital === 'number' ? cloudData.initialCapital : 25000,
@@ -1140,11 +1162,11 @@
             const btnCall = document.getElementById('btnCall');
             const btnPut = document.getElementById('btnPut');
             if (type === 'CALL') {
-                btnCall.className = 'flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-xs sm:text-sm transition-all cursor-pointer border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-md shadow-emerald-500/10';
-                btnPut.className = 'flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-xs sm:text-sm transition-all cursor-pointer border-slate-700/80 bg-obsidian-950 text-slate-400 hover:text-slate-200';
+                btnCall.className = 'flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-sm transition-all cursor-pointer border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-md shadow-emerald-500/10';
+                btnPut.className = 'flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-sm transition-all cursor-pointer border-slate-700/80 bg-obsidian-950 text-slate-400 hover:text-slate-200';
             } else {
-                btnPut.className = 'flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-xs sm:text-sm transition-all cursor-pointer border-rose-500 bg-rose-500/15 text-rose-300 shadow-md shadow-rose-500/10';
-                btnCall.className = 'flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-xs sm:text-sm transition-all cursor-pointer border-slate-700/80 bg-obsidian-950 text-slate-400 hover:text-slate-200';
+                btnPut.className = 'flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-sm transition-all cursor-pointer border-rose-500 bg-rose-500/15 text-rose-300 shadow-md shadow-rose-500/10';
+                btnCall.className = 'flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-sm transition-all cursor-pointer border-slate-700/80 bg-obsidian-950 text-slate-400 hover:text-slate-200';
             }
             updateLivePreview();
         };
@@ -1158,8 +1180,8 @@
             const feeBadge = document.getElementById('headerFeeBadge');
             if (feeBadge) {
                 feeBadge.textContent = contracts > 1
-                    ? `Fee: $${totalComm.toFixed(2)} (${contracts} × $4.85)`
-                    : `Fee: $4.85 / عقد`;
+                    ? `Fee: $${totalComm.toFixed(2)} (${contracts}x)`
+                    : `Fee: $4.85`;
             }
 
             const buy = parseFloat(document.getElementById('buyPriceInput').value) || 0;
@@ -1179,18 +1201,18 @@
             if (buy === 0 && sell === 0) {
                 box.className = 'flex-1 px-3 py-1 rounded-xl bg-obsidian-950 border border-slate-800 flex flex-col justify-center min-w-[95px]';
                 amountEl.className = 'text-sm font-black text-slate-300 num-font truncate';
-                statusEl.className = 'text-xs font-extrabold px-3 py-1 rounded-lg bg-slate-800/90 text-slate-400';
+                statusEl.className = 'text-[11px] sm:text-xs font-extrabold px-2.5 py-1 rounded-lg bg-slate-800/90 text-slate-400';
                 statusEl.textContent = 'بانتظار السعر';
             } else if (net > 0) {
                 box.className = 'flex-1 px-3 py-1 rounded-xl bg-emerald-950/50 border border-emerald-500/40 flex flex-col justify-center min-w-[95px]';
                 amountEl.className = 'text-sm font-black text-emerald-400 num-font truncate';
-                statusEl.className = 'text-xs font-extrabold px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-300';
-                statusEl.textContent = `صفقة رابحة (${contracts}x) 🔥`;
+                statusEl.className = 'text-[11px] sm:text-xs font-extrabold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300';
+                statusEl.textContent = `رابحة (${contracts}x) 🔥`;
             } else if (net < 0) {
                 box.className = 'flex-1 px-3 py-1 rounded-xl bg-rose-950/50 border border-rose-500/40 flex flex-col justify-center min-w-[95px]';
                 amountEl.className = 'text-sm font-black text-rose-400 num-font truncate';
-                statusEl.className = 'text-xs font-extrabold px-3 py-1 rounded-lg bg-rose-500/20 text-rose-300';
-                statusEl.textContent = `صفقة خاسرة (${contracts}x)`;
+                statusEl.className = 'text-[11px] sm:text-xs font-extrabold px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300';
+                statusEl.textContent = `خاسرة (${contracts}x)`;
             } else {
                 box.className = 'flex-1 px-3 py-1 rounded-xl bg-slate-900 border border-slate-700 flex flex-col justify-center min-w-[95px]';
                 amountEl.className = 'text-sm font-black text-slate-200 num-font truncate';
@@ -1198,7 +1220,6 @@
             }
         };
 
-        // --- دوال نافذة تعديل الصفقة ---
         window.populateEditDaysDropdown = function(monthKey, selectedDayVal = null) {
             const daySelect = document.getElementById('editDaySelect');
             if (!daySelect) return;
@@ -1405,10 +1426,10 @@
         function escapeHTML(str) {
             if (!str) return '';
             return String(str)
-                .replace(/&/g, '&')
-                .replace(/</g, '<')
-                .replace(/>/g, '>')
-                .replace(/"/g, '"');
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
         }
 
         window.addTrade = function(event) {
@@ -1502,7 +1523,7 @@
                 const isSelected = selectedSymbolFilter === sym;
                 return `
                     <button onclick="setSymbolFilter('${isSelected ? 'ALL' : sym}')"
-                        class="p-2.5 rounded-xl border text-right transition-all cursor-pointer flex flex-col justify-between ${
+                        class="min-w-[82px] sm:min-w-0 p-2.5 rounded-xl border text-right transition-all cursor-pointer flex flex-col justify-between shrink-0 ${
                             isSelected
                                 ? 'bg-cyan-500/20 border-cyan-400 shadow-md shadow-cyan-500/15'
                                 : 'bg-obsidian-950/80 border-slate-800/90 hover:border-slate-700'
@@ -1539,7 +1560,7 @@
 
             let html = `
                 <button onclick="selectMonthTab('ALL')"
-                    class="flex flex-col items-start justify-between min-w-[96px] px-3 py-2 rounded-xl text-xs transition-all cursor-pointer shrink-0 border ${
+                    class="flex flex-col items-start justify-between min-w-[92px] sm:min-w-[96px] px-3 py-2 rounded-xl text-xs transition-all cursor-pointer shrink-0 border ${
                         allActive
                             ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-obsidian-950 border-amber-300 shadow-lg shadow-amber-500/20'
                             : 'bg-obsidian-900 text-slate-300 border-slate-800 hover:border-slate-700'
@@ -1558,7 +1579,7 @@
                 const isActive = selectedMonth === m.key;
                 return `
                     <button onclick="selectMonthTab('${m.key}')"
-                        class="flex flex-col items-start justify-between min-w-[96px] px-3 py-2 rounded-xl text-xs transition-all cursor-pointer shrink-0 border ${
+                        class="flex flex-col items-start justify-between min-w-[92px] sm:min-w-[96px] px-3 py-2 rounded-xl text-xs transition-all cursor-pointer shrink-0 border ${
                             isActive
                                 ? 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white border-cyan-300 shadow-lg shadow-cyan-500/20'
                                 : 'bg-obsidian-900 text-slate-300 border-slate-800 hover:border-slate-700'
@@ -1664,16 +1685,16 @@
             roiEl.textContent = `${roi >= 0 ? '+' : ''}${roi.toFixed(2)}%`;
 
             if (totalNet >= 0) {
-                netEl.className = 'text-lg sm:text-2xl font-black text-emerald-400 num-font tracking-tight mt-1 truncate';
+                netEl.className = 'text-base sm:text-2xl font-black text-emerald-400 num-font tracking-tight mt-1 truncate';
                 roiEl.className = 'font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 num-font';
             } else {
-                netEl.className = 'text-lg sm:text-2xl font-black text-rose-400 num-font tracking-tight mt-1 truncate';
+                netEl.className = 'text-base sm:text-2xl font-black text-rose-400 num-font tracking-tight mt-1 truncate';
                 roiEl.className = 'font-extrabold px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-300 num-font';
             }
 
             document.getElementById('kpiTotalComm').textContent = `-${formatUSD(totalComm)}`;
             document.getElementById('kpiWinRate').textContent = `${winRate}%`;
-            document.getElementById('kpiWinLossCount').textContent = `(${winCount}W / ${lossCount}L)`;
+            document.getElementById('kpiWinLossCount').textContent = `(${winCount}W/${lossCount}L)`;
             document.getElementById('kpiWinRateBar').style.width = `${winRate}%`;
 
             if (bestTrade && bestNet > 0) {
@@ -1808,7 +1829,7 @@
                 const rawNote = getTradeNote(trade);
 
                 return `
-                    <div class="p-4 space-y-2.5">
+                    <div class="p-3.5 space-y-2.5">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-1.5 flex-wrap">
                                 <span class="text-xs font-bold text-slate-500 num-font">#${filtered.length - index}</span>
@@ -1819,8 +1840,8 @@
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <span class="text-sm font-black num-font ml-1 ${isWin ? 'text-emerald-400' : (isLoss ? 'text-rose-400' : 'text-slate-300')}" dir="ltr">${formatUSD(net, true)}</span>
-                                <button onclick="openEditModal(${trade.id})" class="p-1.5 rounded-lg text-cyan-300 hover:bg-cyan-500/15 bg-obsidian-900 border border-slate-800 cursor-pointer" title="تعديل"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
-                                <button onclick="deleteTrade(${trade.id})" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 bg-obsidian-900 border border-slate-800 cursor-pointer" title="حذف"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                                <button onclick="openEditModal(${trade.id})" class="p-2 rounded-lg text-cyan-300 active:bg-cyan-500/20 bg-obsidian-900 border border-slate-800 cursor-pointer" title="تعديل"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                                <button onclick="deleteTrade(${trade.id})" class="p-2 rounded-lg text-slate-400 active:text-rose-400 bg-obsidian-900 border border-slate-800 cursor-pointer" title="حذف"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                             </div>
                         </div>
                         ${rawNote ? `<div class="px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-200 font-semibold flex items-center gap-1.5"><i data-lucide="sticky-note" class="w-3.5 h-3.5 text-purple-400 shrink-0"></i><span>${escapeHTML(rawNote)}</span></div>` : ''}
@@ -1853,7 +1874,6 @@
             lucide.createIcons();
         }
 
-        // --- دالة الملخص اليومي المنفصل ---
         function renderDailyBreakdown() {
             const grid = document.getElementById('dailyBreakdownGrid');
             const emptyEl = document.getElementById('emptyDailyBreakdown');
@@ -1962,7 +1982,7 @@
 
                 return `
                     <div onclick="focusSpecificDay('${g.monthKey}', '${g.dayStr}')"
-                        class="rounded-2xl border p-4 transition-all cursor-pointer flex flex-col justify-between space-y-3 ${borderClass}">
+                        class="rounded-2xl border p-3.5 sm:p-4 transition-all cursor-pointer flex flex-col justify-between space-y-3 ${borderClass}">
                         <div class="flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2">
                                 <span class="w-9 h-9 rounded-xl flex flex-col items-center justify-center font-black text-xs num-font ${
@@ -2153,7 +2173,7 @@
                 dailyMap[dayKey].net += net;
             });
 
-            document.getElementById('riskTotalContractsBadge').textContent = `إجمالي العقود المتداولة: ${totalContractsAll}`;
+            document.getElementById('riskTotalContractsBadge').textContent = `إجمالي العقود: ${totalContractsAll}`;
 
             const pfEl = document.getElementById('riskProfitFactor');
             const pfBadge = document.getElementById('riskPfStatusBadge');
@@ -2222,7 +2242,6 @@
             document.getElementById('riskCommImpact').textContent = `${commRatio.toFixed(1)}%`;
         }
 
-        // --- النسخ الاحتياطي والاستعادة (JSON Backup) ---
         window.exportBackupJSON = function() {
             const dataStr = JSON.stringify(window.appState, null, 2);
             const blob = new Blob([dataStr], { type: 'application/json' });
