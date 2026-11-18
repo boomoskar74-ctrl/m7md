@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>منصة إدارة محفظة تداول عقود الخيارات | SPX • SPY • NDX • TSLA • NVDA</title>
+    <!-- تحميل Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- تحميل خط Cairo و Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- مكتبة الأيقونات Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- مكتبة الرسوم البيانية Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Cairo', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        dark: {
+                            950: '#060913',
+                            900: '#0B1120',
+                            850: '#111827',
+                            800: '#162033',
+                            700: '#1E293B'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+            background-color: #060913;
+            color: #F8FAFC;
+            font-family: 'Cairo', 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* منع التكبير التلقائي في متصفح الآيفون عند لمس الحقول */
+        @media screen and (max-width: 768px) {
+            input, select, textarea {
+                font-size: 16px !important;
+            }
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        .glass-card {
+            background: linear-gradient(145deg, rgba(22, 32, 51, 0.85), rgba(11, 17, 32, 0.95));
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(51, 65, 85, 0.55);
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            body { background-color: #ffffff !important; color: #000000 !important; }
+            .glass-card { background: #ffffff !important; border: 1px solid #cbd5e1 !important; color: #000000 !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen antialiased selection:bg-blue-500/30 selection:text-blue-200 pb-8">
+
+    <!-- خلفية جمالية -->
+    <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div class="absolute -top-40 -right-40 w-80 sm:w-96 h-80 sm:h-96 bg-blue-600/15 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/3 -left-40 w-80 sm:w-96 h-80 sm:h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
+    </div>
+
+    <!-- الشريط العلوي المتجاوب -->
+    <header class="sticky top-0 z-30 border-b border-slate-800/80 bg-dark-950/90 backdrop-blur-xl no-print">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3">
+            <div class="flex flex-wrap items-center justify-between gap-2.5">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 shadow-lg shadow-blue-600/25 border border-blue-400/20 shrink-0">
+                        <i data-lucide="candlestick-chart" class="w-5 h-5 sm:w-6 sm:h-6 text-white"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h1 class="text-base sm:text-xl font-extrabold tracking-tight text-white truncate">محفظة عقود الخيارات</h1>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-blue-500/15 text-blue-300 border border-blue-400/30 tracking-wide shrink-0" dir="ltr">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                SPX • SPY • NDX • TSLA • NVDA
+                            </span>
+                        </div>
+                        <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5 truncate">متتبع أرباح عقود الخيارات والعمولات</p>
+                    </div>
+                </div>
+
+                <!-- أزرار التحكم والمزامنة -->
+                <div class="flex items-center gap-1.5 sm:gap-2.5 w-full sm:w-auto justify-end">
+                    <button onclick="openSyncModal()" id="syncStatusBtn" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition-all cursor-pointer">
+                        <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <span id="syncLabel">مزامنة</span>
+                    </button>
+                    <button onclick="exportToCSV()" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-dark-800 text-slate-200 border border-slate-700 hover:bg-dark-700 transition-all cursor-pointer">
+                        <i data-lucide="download" class="w-4 h-4 text-blue-400"></i>
+                        <span>Excel</span>
+                    </button>
+                    <button onclick="confirmClearAll()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/25 hover:bg-rose-500/20 transition-all cursor-pointer" title="تصفير السجل">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                        <span class="hidden md:inline">تصفير</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-5 sm:space-y-6">
+
+        <!-- 1. صف المؤشرات الرئيسية (4 بطاقات متجاوبة) -->
+        <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <!-- رأس مال المحفظة الأساسي -->
+            <div class="glass-card rounded-2xl p-3.5 sm:p-5 shadow-xl relative overflow-hidden">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[11px] sm:text-xs font-bold text-slate-400">رأس مال المحفظة</span>
+                    <div class="p-1.5 sm:p-2 rounded-xl bg-blue-500/15 text-blue-400 border border-blue-500/20">
+                        <i data-lucide="wallet" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+                    </div>
+                </div>
+                <div class="relative flex items-center mt-1">
+                    <span class="text-sm sm:text-lg font-extrabold text-slate-400 ml-1">$</span>
+                    <input type="number" id="initialCapitalInput" inputmode="decimal" min="0" step="100" value="25000"
+                        onchange="handleCapitalChange(this.value)"
+                        oninput="handleCapitalChange(this.value)"
+                        class="w-full bg-dark-950/70 border border-slate-700/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-2.5 py-1.5 text-base sm:text-xl font-black text-white outline-none transition-all" dir="ltr">
+                </div>
+                <p class="text-[10px] sm:text-[11px] text-slate-400 mt-1.5">اضغط لتعديل رأس المال</p>
+            </div>
+
+            <!-- المبلغ الإجمالي الحالي للمحفظة -->
+            <div class="glass-card rounded-2xl p-3.5 sm:p-5 shadow-xl relative overflow-hidden border-blue-500/30">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[11px] sm:text-xs font-bold text-blue-300">المبلغ الإجمالي</span>
+                    <div class="p-1.5 sm:p-2 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-400/20">
+                        <i data-lucide="landmark" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+                    </div>
+                </div>
+                <div id="kpiCurrentBalance" class="text-lg sm:text-2xl font-black text-white tracking-tight mt-1.5 truncate" dir="ltr">$25,000.00</div>
+                <div class="flex items-center gap-1 mt-1.5 text-[10px] sm:text-[11px] text-slate-400">
+                    <span>الرصيد بعد صافي الصفقات</span>
+                </div>
+            </div>
+
+            <!-- صافي الربح / الخسارة -->
+            <div class="glass-card rounded-2xl p-3.5 sm:p-5 shadow-xl relative overflow-hidden">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[11px] sm:text-xs font-bold text-slate-400">صافي الربح / الخسارة</span>
+                    <div id="kpiNetIconBox" class="p-1.5 sm:p-2 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                        <i data-lucide="trending-up" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+                    </div>
+                </div>
+                <div id="kpiNetProfit" class="text-lg sm:text-2xl font-black text-emerald-400 tracking-tight mt-1.5 truncate" dir="ltr">+$0.00</div>
+                <div class="flex items-center justify-between mt-1.5 text-[10px] sm:text-[11px]">
+                    <span class="text-slate-400">العائد:</span>
+                    <span id="kpiRoiBadge" class="font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300" dir="ltr">0.00%</span>
+                </div>
+            </div>
+
+            <!-- إجمالي الصفقات ونسبة النجاح -->
+            <div class="glass-card rounded-2xl p-3.5 sm:p-5 shadow-xl relative overflow-hidden">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[11px] sm:text-xs font-bold text-slate-400">إجمالي الصفقات</span>
+                    <div class="p-1.5 sm:p-2 rounded-xl bg-purple-500/15 text-purple-400 border border-purple-500/20">
+                        <i data-lucide="layers" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-1.5 mt-1.5">
+                    <span id="kpiTotalTrades" class="text-lg sm:text-2xl font-black text-white">0</span>
+                    <span class="text-[11px] sm:text-xs font-semibold text-slate-400">صفقة</span>
+                </div>
+                <div class="flex items-center justify-between mt-1.5 text-[10px] sm:text-[11px]">
+                    <span class="text-slate-400">النجاح: <strong id="kpiWinRate" class="text-slate-200">0%</strong></span>
+                    <span id="kpiTotalComm" class="text-amber-400 font-bold" dir="ltr">-$0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. شريط إضافة الصفقة السريع المتجاوب -->
+        <section class="glass-card rounded-2xl p-4 sm:p-5 shadow-xl no-print border-emerald-500/20">
+            <div class="flex items-center justify-between gap-2 mb-3.5 pb-2.5 border-b border-slate-800/80">
+                <div class="flex items-center gap-2">
+                    <div class="p-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/25 text-emerald-400">
+                        <i data-lucide="zap" class="w-4 h-4"></i>
+                    </div>
+                    <h3 class="text-sm sm:text-base font-bold text-white">إضافة صفقة جديدة</h3>
+                    <span id="addingToMonthBadge" class="hidden sm:inline-block text-xs font-bold px-2.5 py-0.5 rounded-md bg-blue-500/15 text-blue-300 border border-blue-400/25">الشهر المحدد: نوفمبر 2026</span>
+                </div>
+                <div id="livePreviewStatus" class="text-[11px] sm:text-xs font-bold px-2.5 py-1 rounded-md bg-slate-800 text-slate-400">بانتظار الإدخال</div>
+            </div>
+
+            <form id="tradeForm" onsubmit="addTrade(event)" class="grid grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+                <!-- اختيار الشركة / المؤشر (قائمة منبثقة) -->
+                <div class="col-span-1 lg:col-span-2">
+                    <label for="tradeSymbolSelect" class="block text-xs font-bold text-slate-400 mb-1.5">الشركة / المؤشر</label>
+                    <select id="tradeSymbolSelect"
+                        class="w-full px-3 py-2.5 bg-dark-950/90 border border-slate-700 rounded-xl text-xs sm:text-sm font-extrabold text-cyan-300 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 transition-all cursor-pointer">
+                        <option value="SPX">SPX (S&P 500)</option>
+                        <option value="SPY">SPY (SPDR ETF)</option>
+                        <option value="NDX">NDX (Nasdaq 100)</option>
+                        <option value="TSLA">TSLA (تسلا)</option>
+                        <option value="NVDA">NVDA (إنفيديا)</option>
+                    </select>
+                </div>
+
+                <!-- اختيار الشهر واليوم -->
+                <div class="col-span-1 lg:col-span-2 grid grid-cols-3 gap-1.5">
+                    <div class="col-span-2">
+                        <label for="tradeMonthSelect" class="block text-xs font-bold text-slate-400 mb-1.5">الشهر</label>
+                        <select id="tradeMonthSelect" onchange="syncFormMonthToFilter(this.value)"
+                            class="w-full px-2.5 py-2.5 bg-dark-950/90 border border-slate-700 rounded-xl text-xs sm:text-sm font-bold text-blue-300 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 transition-all cursor-pointer">
+                        </select>
+                    </div>
+                    <div class="col-span-1">
+                        <label for="tradeDaySelect" class="block text-xs font-bold text-slate-400 mb-1.5">اليوم</label>
+                        <select id="tradeDaySelect"
+                            class="w-full px-1.5 py-2.5 bg-dark-950/90 border border-slate-700 rounded-xl text-xs sm:text-sm font-extrabold text-amber-300 text-center focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-500/20 transition-all cursor-pointer" dir="ltr">
+                        </select>
+                    </div>
+                </div>
+
+                <!-- اختيار نوع الصفقة: CALL أو PUT -->
+                <div class="col-span-2 sm:col-span-1 lg:col-span-2">
+                    <label class="block text-xs font-bold text-slate-400 mb-1.5">نوع العقد</label>
+                    <div class="grid grid-cols-2 gap-1.5">
+                        <button type="button" id="btnCall" onclick="selectTradeType('CALL')"
+                            class="flex items-center justify-center gap-1 py-2.5 px-1.5 rounded-xl border-2 font-extrabold text-xs transition-all cursor-pointer border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-md shadow-emerald-500/10">
+                            <i data-lucide="trending-up" class="w-3.5 h-3.5 text-emerald-400"></i>
+                            <span>CALL</span>
+                        </button>
+                        <button type="button" id="btnPut" onclick="selectTradeType('PUT')"
+                            class="flex items-center justify-center gap-1 py-2.5 px-1.5 rounded-xl border-2 font-extrabold text-xs transition-all cursor-pointer border-slate-700/80 bg-dark-900/60 text-slate-400 hover:border-slate-600 hover:text-slate-200">
+                            <i data-lucide="trending-down" class="w-3.5 h-3.5"></i>
+                            <span>PUT</span>
+                        </button>
+                    </div>
+                    <input type="hidden" id="tradeTypeInput" value="CALL">
+                </div>
+
+                <!-- سعر الشراء -->
+                <div class="col-span-1 lg:col-span-1">
+                    <label for="buyPriceInput" class="block text-xs font-bold text-slate-400 mb-1.5">سعر الشراء ($)</label>
+                    <div class="relative">
+                        <input type="number" id="buyPriceInput" inputmode="decimal" step="any" min="0" required placeholder="0.00" oninput="updateLivePreview()"
+                            class="w-full pl-5 pr-2.5 py-2.5 bg-dark-950/90 border border-slate-700 rounded-xl text-sm font-extrabold text-white placeholder-slate-600 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 transition-all" dir="ltr">
+                        <span class="absolute left-2 top-3 text-xs font-bold text-slate-500">$</span>
+                    </div>
+                </div>
+
+                <!-- سعر البيع -->
+                <div class="col-span-1 lg:col-span-1">
+                    <label for="sellPriceInput" class="block text-xs font-bold text-slate-400 mb-1.5">سعر البيع ($)</label>
+                    <div class="relative">
+                        <input type="number" id="sellPriceInput" inputmode="decimal" step="any" min="0" required placeholder="0.00" oninput="updateLivePreview()"
+                            class="w-full pl-5 pr-2.5 py-2.5 bg-dark-950/90 border border-slate-700 rounded-xl text-sm font-extrabold text-white placeholder-slate-600 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 transition-all" dir="ltr">
+                        <span class="absolute left-2 top-3 text-xs font-bold text-slate-500">$</span>
+                    </div>
+                </div>
+
+                <!-- عمولة الموقع -->
+                <div class="col-span-2 sm:col-span-1 lg:col-span-1">
+                    <label for="commissionInput" class="block text-xs font-bold text-slate-400 mb-1.5">العمولة ($)</label>
+                    <div class="relative">
+                        <input type="number" id="commissionInput" inputmode="decimal" step="any" min="0" value="4" placeholder="4.00" oninput="updateLivePreview()"
+                            class="w-full pl-5 pr-2.5 py-2.5 bg-dark-950/90 border border-slate-700 rounded-xl text-sm font-extrabold text-amber-300 placeholder-slate-600 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-500/20 transition-all" dir="ltr">
+                        <span class="absolute left-2 top-3 text-xs font-bold text-slate-500">$</span>
+                    </div>
+                </div>
+
+                <!-- المعاينة الفورية + زر الإضافة -->
+                <div class="col-span-2 lg:col-span-3 flex items-stretch gap-2 pt-1 lg:pt-0">
+                    <div id="livePreviewBox" class="flex-1 px-2.5 py-2 rounded-xl bg-dark-950/90 border border-slate-800 flex flex-col justify-center transition-all min-w-[100px]">
+                        <div class="flex items-center justify-between text-[10px] text-slate-400">
+                            <span>النتيجة</span>
+                            <span id="liveTradeRoi" class="font-bold text-slate-300" dir="ltr">0.0%</span>
+                        </div>
+                        <span id="livePreviewAmount" class="text-sm sm:text-base font-black text-slate-300 truncate" dir="ltr">$0.00</span>
+                    </div>
+
+                    <button type="submit"
+                        class="px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        <span>إضافة</span>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- 3. شريط تبويب الشهور + سجل الصفقات -->
+        <section class="glass-card rounded-2xl shadow-xl overflow-hidden">
+            <!-- شريط الشهور القابل للتمرير الأفقي بسلاسة على الجوال -->
+            <div class="bg-dark-950/90 border-b border-slate-800 px-3 sm:px-5 py-3.5 no-print space-y-3">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-extrabold text-slate-300 flex items-center gap-1.5">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5 text-blue-400"></i>
+                        <span>تصفح حسب الشهر</span>
+                    </span>
+                    <button onclick="toggleDaysViewMode()" id="daysViewToggleBtn" class="hidden text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-800/90 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer">
+                        عرض كل الأيام (1-30)
+                    </button>
+                </div>
+                <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5" id="monthsTabsContainer">
+                </div>
+                <!-- شبكة أيام الشهر المحدد بتصميم تقويم مصغر -->
+                <div id="daysTabsWrapper" class="pt-2.5 border-t border-slate-800/80">
+                </div>
+            </div>
+
+            <!-- رأس الجدول وأدوات التصفية -->
+            <div class="p-4 sm:p-5 border-b border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="p-2 rounded-xl bg-blue-500/15 border border-blue-500/25 text-blue-400 shrink-0">
+                        <i data-lucide="table-2" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h3 class="text-sm sm:text-lg font-bold text-white" id="tableMonthTitle">سجل الصفقات</h3>
+                            <span id="monthNetSummaryBadge" class="text-xs font-extrabold px-2.5 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/25" dir="ltr">+$0.00</span>
+                        </div>
+                        <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5">مرتبة زمنياً مع خصم عمولة المنصة ($4.00)</p>
+                    </div>
+                </div>
+
+                <!-- فلاتر سريعة متجاوبة + قائمة تصفية الشركة -->
+                <div class="flex flex-wrap items-center gap-2 no-print">
+                    <select id="symbolFilterSelect" onchange="setSymbolFilter(this.value)"
+                        class="px-3 py-2 bg-dark-950/90 border border-slate-800 rounded-xl text-xs font-bold text-cyan-300 focus:outline-none focus:border-cyan-400 cursor-pointer">
+                        <option value="ALL">كل الشركات (الكل)</option>
+                        <option value="SPX">SPX فقط</option>
+                        <option value="SPY">SPY فقط</option>
+                        <option value="NDX">NDX فقط</option>
+                        <option value="TSLA">TSLA (تسلا)</option>
+                        <option value="NVDA">NVDA (إنفيديا)</option>
+                    </select>
+
+                    <div class="grid grid-cols-5 sm:flex sm:items-center gap-1 bg-dark-950/90 p-1 rounded-xl border border-slate-800 text-[11px] sm:text-xs font-bold">
+                        <button onclick="setFilter('ALL')" id="filter-ALL" class="filter-btn py-2 px-2 sm:px-3 rounded-lg bg-blue-600 text-white shadow-xs transition-all cursor-pointer text-center">الكل</button>
+                        <button onclick="setFilter('CALL')" id="filter-CALL" class="filter-btn py-2 px-2 sm:px-3 rounded-lg text-slate-400 hover:text-emerald-300 transition-all cursor-pointer text-center">CALL</button>
+                        <button onclick="setFilter('PUT')" id="filter-PUT" class="filter-btn py-2 px-2 sm:px-3 rounded-lg text-slate-400 hover:text-rose-300 transition-all cursor-pointer text-center">PUT</button>
+                        <button onclick="setFilter('WIN')" id="filter-WIN" class="filter-btn py-2 px-2 sm:px-3 rounded-lg text-slate-400 hover:text-emerald-300 transition-all cursor-pointer text-center">رابحة</button>
+                        <button onclick="setFilter('LOSS')" id="filter-LOSS" class="filter-btn py-2 px-2 sm:px-3 rounded-lg text-slate-400 hover:text-rose-300 transition-all cursor-pointer text-center">خاسرة</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- عرض البطاقات المخصص للجوال (Mobile Cards View) -->
+            <div id="mobileTradesContainer" class="md:hidden divide-y divide-slate-800/70">
+            </div>
+
+            <!-- ملخص الإجماليات للجوال -->
+            <div id="mobileSummaryFooter" class="md:hidden bg-dark-950 border-t-2 border-blue-500/30 p-4 space-y-2 text-xs">
+                <div class="flex items-center justify-between">
+                    <span class="text-blue-400 font-extrabold" id="mobileFootLabel">مجموع الشهر:</span>
+                    <span id="mobileFootCount" class="bg-blue-500/15 text-blue-300 border border-blue-400/25 px-2.5 py-0.5 rounded-lg font-bold">0 صفقات</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800/80 text-center">
+                    <div>
+                        <span class="text-slate-400 block text-[10px]">إجمالي الشراء</span>
+                        <span id="mobileFootBuy" class="font-bold text-slate-200" dir="ltr">$0.00</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block text-[10px]">إجمالي البيع</span>
+                        <span id="mobileFootSell" class="font-bold text-slate-200" dir="ltr">$0.00</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block text-[10px]">صافي النتيجة</span>
+                        <span id="mobileFootNet" class="font-black text-emerald-400" dir="ltr">+$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- الجدول الكامل لشاشات الكمبيوتر والتابلت -->
+            <div class="hidden md:block overflow-x-auto">
+                <table class="w-full text-right border-collapse">
+                    <thead>
+                        <tr class="bg-dark-950/80 border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                            <th class="py-3.5 px-3 text-center">#</th>
+                            <th class="py-3.5 px-3">الشركة</th>
+                            <th class="py-3.5 px-3">الشهر والتاريخ</th>
+                            <th class="py-3.5 px-3">نوع الصفقة</th>
+                            <th class="py-3.5 px-3">سعر الشراء</th>
+                            <th class="py-3.5 px-3">سعر البيع</th>
+                            <th class="py-3.5 px-3">العمولة</th>
+                            <th class="py-3.5 px-3">صافي النتيجة</th>
+                            <th class="py-3.5 px-3 text-center no-print">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tradesTableBody" class="divide-y divide-slate-800/60 text-xs sm:text-sm">
+                    </tbody>
+                    <tfoot id="tradesTableFoot" class="bg-dark-950 border-t-2 border-blue-500/30 text-xs sm:text-sm font-bold">
+                        <tr>
+                            <td colspan="4" class="py-4 px-4">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="text-blue-400 font-extrabold" id="footSummaryLabel">مجموع الشهر:</span>
+                                    <span id="footTradeCount" class="bg-blue-500/15 text-blue-300 border border-blue-400/25 text-xs px-2.5 py-0.5 rounded-lg">0 صفقات</span>
+                                </div>
+                            </td>
+                            <td class="py-4 px-3 text-slate-300" id="footTotalBuy" dir="ltr">$0.00</td>
+                            <td class="py-4 px-3 text-slate-300" id="footTotalSell" dir="ltr">$0.00</td>
+                            <td class="py-4 px-3 text-amber-400" id="footTotalComm" dir="ltr">-$0.00</td>
+                            <td class="py-4 px-3 text-base font-black" id="footTotalNet" dir="ltr">$0.00</td>
+                            <td class="py-4 px-3 text-center no-print text-xs text-slate-500">الإجمالي</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- حالة الجدول الفارغ -->
+            <div id="emptyTableState" class="hidden py-12 px-4 text-center">
+                <div class="w-12 h-12 rounded-2xl bg-slate-800/80 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                    <i data-lucide="inbox" class="w-6 h-6"></i>
+                </div>
+                <h4 class="text-sm font-bold text-slate-300">لا توجد صفقات مطابقة</h4>
+                <p class="text-xs text-slate-500 mt-1">أضف صفقة جديدة من النموذج أعلاه أو اختر شهراً/شركة أخرى.</p>
+            </div>
+        </section>
+
+        <!-- 4. قسم التحليلات والرسوم البيانية -->
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 no-print">
+            <!-- منحنى نمو المحفظة -->
+            <div class="lg:col-span-8 glass-card rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col justify-between">
+                <div class="flex items-center justify-between gap-2 mb-3">
+                    <div class="flex items-center gap-2">
+                        <div class="p-1.5 rounded-lg bg-blue-500/15 border border-blue-500/25 text-blue-400">
+                            <i data-lucide="line-chart" class="w-4 h-4"></i>
+                        </div>
+                        <h3 class="text-sm sm:text-base font-bold text-white">منحنى نمو المحفظة (Equity Curve)</h3>
+                    </div>
+                    <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-300 border border-blue-500/20">تراكمي</span>
+                </div>
+                <div class="relative w-full h-56 sm:h-64">
+                    <canvas id="equityChart"></canvas>
+                </div>
+            </div>
+
+            <!-- توزيع صفقات CALL vs PUT -->
+            <div class="lg:col-span-4 glass-card rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col justify-between">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="p-1.5 rounded-lg bg-purple-500/15 border border-purple-500/25 text-purple-400">
+                        <i data-lucide="pie-chart" class="w-4 h-4"></i>
+                    </div>
+                    <h3 class="text-sm sm:text-base font-bold text-white">توزيع CALL مقابل PUT</h3>
+                </div>
+                <div class="relative w-full h-44 flex items-center justify-center">
+                    <canvas id="distributionChart"></canvas>
+                </div>
+                <div class="grid grid-cols-2 gap-2.5 mt-3 pt-3 border-t border-slate-800/80 text-xs">
+                    <div class="bg-dark-950/70 p-2.5 rounded-xl border border-emerald-500/20">
+                        <div class="flex items-center justify-between text-slate-400 mb-1">
+                            <span>عقود CALL</span>
+                            <span id="callCountBadge" class="font-bold text-emerald-400">0</span>
+                        </div>
+                        <div id="callNetText" class="font-extrabold text-emerald-300 text-sm" dir="ltr">$0.00</div>
+                    </div>
+                    <div class="bg-dark-950/70 p-2.5 rounded-xl border border-rose-500/20">
+                        <div class="flex items-center justify-between text-slate-400 mb-1">
+                            <span>عقود PUT</span>
+                            <span id="putCountBadge" class="font-bold text-rose-400">0</span>
+                        </div>
+                        <div id="putNetText" class="font-extrabold text-rose-300 text-sm" dir="ltr">$0.00</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- نافذة مزامنة الأجهزة -->
+    <div id="syncModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-xs p-4">
+        <div class="glass-card rounded-2xl max-w-md w-full p-5 sm:p-6 border border-slate-700 shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="p-2 rounded-xl bg-blue-500/15 text-blue-400">
+                        <i data-lucide="cloud" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-base sm:text-lg font-extrabold text-white">مزامنة الكمبيوتر والجوال</h3>
+                </div>
+                <button onclick="closeSyncModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-white cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed mb-4">
+                استخدم نفس <strong>رمز المحفظة المشترك</strong> في الكمبيوتر والآيفون لتتحدث الصفقات لحظياً بين الجهازين:
+            </p>
+            <div class="space-y-3 mb-5">
+                <label class="block text-xs font-bold text-slate-400">رمز المحفظة (Sync ID)</label>
+                <div class="flex gap-2">
+                    <input type="text" id="syncRoomInput" value="spx-main-portfolio"
+                        class="flex-1 px-3 py-2.5 bg-dark-950 border border-slate-700 rounded-xl text-sm font-bold text-emerald-300 focus:outline-none focus:border-blue-500" dir="ltr">
+                    <button onclick="copySyncId()" class="px-3 py-2.5 bg-dark-800 hover:bg-dark-700 text-slate-200 rounded-xl text-xs font-bold border border-slate-700 cursor-pointer">نسخ</button>
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-2.5">
+                <button onclick="closeSyncModal()" class="px-4 py-2.5 rounded-xl bg-dark-800 text-slate-300 text-xs sm:text-sm font-bold cursor-pointer">إغلاق</button>
+                <button onclick="applySyncRoom()" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold cursor-pointer">ربط وتحديث</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة تأكيد تصفير البيانات -->
+    <div id="confirmModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-xs p-4">
+        <div class="glass-card rounded-2xl max-w-sm w-full p-5 sm:p-6 border border-slate-700 shadow-2xl">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="p-2.5 rounded-xl bg-rose-500/15 text-rose-400">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                </div>
+                <h3 class="text-base font-extrabold text-white">تصفير سجل الصفقات؟</h3>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed mb-5">
+                سيتم حذف جميع الصفقات المسجلة وإعادة المحفظة لحالتها الفارغة. هل أنت متأكد؟
+            </p>
+            <div class="flex items-center justify-end gap-2.5">
+                <button onclick="closeConfirmModal()" class="px-4 py-2 rounded-xl bg-dark-800 text-slate-300 text-xs sm:text-sm font-bold cursor-pointer">إلغاء</button>
+                <button onclick="executeClearAll()" class="px-4 py-2 rounded-xl bg-rose-600 text-white text-xs sm:text-sm font-bold cursor-pointer">نعم، تصفير</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- إشعار منبثق (Toast) -->
+    <div id="toast" class="fixed bottom-4 left-4 right-4 sm:right-auto sm:left-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="flex items-center justify-center sm:justify-start gap-2.5 bg-dark-850 border border-slate-700 text-white px-4 py-3 rounded-xl shadow-2xl text-xs sm:text-sm font-bold">
+            <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+            <span id="toastMessage">تم الحفظ</span>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const LOCAL_STORAGE_KEY = 'options_portfolio_tracker_v2';
+
+        // قائمة أشهر السنة الكاملة (12 شهراً) مرتبة من الأحدث للأقدم
+        const MONTHS_LIST = [
+            { key: '2026-12', label: 'ديسمبر 2026', short: 'ديسمبر' },
+            { key: '2026-11', label: 'نوفمبر 2026', short: 'نوفمبر' },
+            { key: '2026-10', label: 'أكتوبر 2026', short: 'أكتوبر' },
+            { key: '2026-09', label: 'سبتمبر 2026', short: 'سبتمبر' },
+            { key: '2026-08', label: 'أغسطس 2026', short: 'أغسطس' },
+            { key: '2026-07', label: 'يوليو 2026', short: 'يوليو' },
+            { key: '2026-06', label: 'يونيو 2026', short: 'يونيو' },
+            { key: '2026-05', label: 'مايو 2026', short: 'مايو' },
+            { key: '2026-04', label: 'أبريل 2026', short: 'أبريل' },
+            { key: '2026-03', label: 'مارس 2026', short: 'مارس' },
+            { key: '2026-02', label: 'فبراير 2026', short: 'فبراير' },
+            { key: '2026-01', label: 'يناير 2026', short: 'يناير' }
+        ];
+
+        const ARABIC_WEEKDAYS = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+        const DEMO_TRADES = [
+            { id: 101, symbol: 'SPX', month: '2026-11', day: '18', type: 'CALL', buyPrice: 450.00, sellPrice: 720.00, commission: 4.00, date: '18/11/2026 17:15' },
+            { id: 102, symbol: 'NVDA', month: '2026-11', day: '15', type: 'PUT', buyPrice: 380.00, sellPrice: 540.00, commission: 4.00, date: '15/11/2026 19:40' },
+            { id: 103, symbol: 'TSLA', month: '2026-11', day: '10', type: 'CALL', buyPrice: 500.00, sellPrice: 320.00, commission: 4.00, date: '10/11/2026 18:10' },
+            { id: 104, symbol: 'NDX', month: '2026-11', day: '04', type: 'CALL', buyPrice: 610.00, sellPrice: 890.00, commission: 4.00, date: '04/11/2026 20:25' },
+            { id: 105, symbol: 'SPY', month: '2026-10', day: '25', type: 'PUT', buyPrice: 420.00, sellPrice: 680.00, commission: 4.00, date: '25/10/2026 18:50' },
+            { id: 106, symbol: 'SPX', month: '2026-10', day: '14', type: 'CALL', buyPrice: 480.00, sellPrice: 730.00, commission: 4.00, date: '14/10/2026 17:35' },
+            { id: 107, symbol: 'TSLA', month: '2026-09', day: '21', type: 'CALL', buyPrice: 310.00, sellPrice: 190.00, commission: 4.00, date: '21/09/2026 20:05' },
+            { id: 108, symbol: 'NVDA', month: '2026-09', day: '08', type: 'PUT', buyPrice: 440.00, sellPrice: 690.00, commission: 4.00, date: '08/09/2026 18:20' },
+            { id: 109, symbol: 'NDX', month: '2026-08', day: '19', type: 'CALL', buyPrice: 360.00, sellPrice: 590.00, commission: 4.00, date: '19/08/2026 17:45' },
+            { id: 110, symbol: 'SPY', month: '2026-07', day: '22', type: 'PUT', buyPrice: 290.00, sellPrice: 470.00, commission: 4.00, date: '22/07/2026 19:30' },
+            { id: 111, symbol: 'SPX', month: '2026-06', day: '17', type: 'CALL', buyPrice: 400.00, sellPrice: 650.00, commission: 4.00, date: '17/06/2026 18:10' }
+        ];
+
+        // خريطة ألوان وأسماء الشركات والمؤشرات
+        const SYMBOL_META = {
+            SPX: { label: 'SPX', badge: 'bg-blue-500/15 text-blue-300 border-blue-400/30' },
+            SPY: { label: 'SPY', badge: 'bg-indigo-500/15 text-indigo-300 border-indigo-400/30' },
+            NDX: { label: 'NDX', badge: 'bg-cyan-500/15 text-cyan-300 border-cyan-400/30' },
+            TSLA: { label: 'TSLA تسلا', badge: 'bg-rose-500/15 text-rose-300 border-rose-400/30' },
+            NVDA: { label: 'NVDA إنفيديا', badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/30' }
+        };
+
+        // حالة التطبيق الرئيسية
+        let appState = {
+            initialCapital: 25000,
+            trades: [...DEMO_TRADES]
+        };
+
+        let selectedMonth = '2026-11';
+        let selectedDay = 'ALL';
+        let showAllMonthDays = false;
+        let selectedSymbolFilter = 'ALL';
+        let currentFilter = 'ALL';
+        let equityChartInstance = null;
+        let distributionChartInstance = null;
+
+        // متغيرات المزامنة السحابية
+        let db = null;
+        let auth = null;
+        let currentUser = null;
+        let unsubscribeSnapshot = null;
+        let syncRoomId = 'spx-main-portfolio';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        function formatUSD(amount, showPlus = false) {
+            const absVal = Math.abs(amount).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+            if (amount < 0) return `-$${absVal}`;
+            if (amount > 0 && showPlus) return `+$${absVal}`;
+            return `$${absVal}`;
+        }
+
+        function loadLocalBackup() {
+            try {
+                const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && typeof parsed.initialCapital === 'number' && Array.isArray(parsed.trades)) {
+                        appState = parsed;
+                    }
+                }
+            } catch (e) {}
+        }
+
+        function saveLocalBackup() {
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appState));
+            } catch (e) {}
+        }
+
+        async function initCloudSync() {
+            loadLocalBackup();
+            document.getElementById('initialCapitalInput').value = appState.initialCapital;
+            renderAll();
+
+            try {
+                if (typeof __firebase_config === 'undefined') {
+                    updateSyncUI('local', 'محفوظ محلياً');
+                    return;
+                }
+                const firebaseConfig = JSON.parse(__firebase_config);
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    const cred = await signInWithCustomToken(auth, __initial_auth_token);
+                    currentUser = cred.user;
+                } else {
+                    const cred = await signInAnonymously(auth);
+                    currentUser = cred.user;
+                }
+
+                listenToPortfolioDoc();
+            } catch (err) {
+                updateSyncUI('local', 'وضع محلي');
+            }
+        }
+
+        function listenToPortfolioDoc() {
+            if (!db || !currentUser) return;
+            if (unsubscribeSnapshot) unsubscribeSnapshot();
+
+            const safeId = syncRoomId.replace(/[^a-zA-Z0-9_-]/g, '') || 'spx-main-portfolio';
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'spx_portfolios', safeId);
+
+            unsubscribeSnapshot = onSnapshot(docRef, (snap) => {
+                if (snap.exists()) {
+                    const data = snap.data();
+                    if (typeof data.initialCapital === 'number') {
+                        appState.initialCapital = data.initialCapital;
+                        document.getElementById('initialCapitalInput').value = appState.initialCapital;
+                    }
+                    if (Array.isArray(data.trades)) {
+                        appState.trades = data.trades;
+                    }
+                    saveLocalBackup();
+                    renderAll();
+                } else {
+                    saveState();
+                }
+                updateSyncUI('online', 'مزامنة نشطة');
+            }, () => {
+                updateSyncUI('local', 'وضع محلي');
+            });
+        }
+
+        async function saveState() {
+            saveLocalBackup();
+            if (!db || !currentUser) return;
+            try {
+                const safeId = syncRoomId.replace(/[^a-zA-Z0-9_-]/g, '') || 'spx-main-portfolio';
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'spx_portfolios', safeId);
+                await setDoc(docRef, {
+                    initialCapital: appState.initialCapital,
+                    trades: appState.trades,
+                    updatedAt: Date.now()
+                });
+            } catch (e) {}
+        }
+
+        function updateSyncUI(status, text) {
+            const dot = document.getElementById('syncDot');
+            const label = document.getElementById('syncLabel');
+            if (!dot || !label) return;
+            label.textContent = text;
+            dot.className = status === 'online'
+                ? 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse'
+                : 'w-2 h-2 rounded-full bg-blue-400';
+        }
+
+        // نافذة المزامنة
+        window.openSyncModal = function() {
+            document.getElementById('syncRoomInput').value = syncRoomId;
+            const modal = document.getElementById('syncModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+        window.closeSyncModal = function() {
+            const modal = document.getElementById('syncModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+        window.copySyncId = function() {
+            const input = document.getElementById('syncRoomInput');
+            input.select();
+            document.execCommand('copy');
+            showToast('تم نسخ رمز المحفظة');
+        };
+        window.applySyncRoom = function() {
+            const val = document.getElementById('syncRoomInput').value.trim();
+            if (val) {
+                syncRoomId = val;
+                listenToPortfolioDoc();
+                showToast(`تم الربط بالرمز: ${syncRoomId}`);
+            }
+            closeSyncModal();
+        };
+
+        // تحديث رأس المال
+        window.handleCapitalChange = function(val) {
+            const parsed = parseFloat(val);
+            appState.initialCapital = isNaN(parsed) || parsed < 0 ? 0 : parsed;
+            saveState();
+            renderKPIs();
+            renderCharts();
+        };
+
+        // اختيار نوع الصفقة CALL / PUT
+        window.selectTradeType = function(type) {
+            document.getElementById('tradeTypeInput').value = type;
+            const btnCall = document.getElementById('btnCall');
+            const btnPut = document.getElementById('btnPut');
+
+            if (type === 'CALL') {
+                btnCall.className = 'flex items-center justify-center gap-1 py-2.5 px-1.5 rounded-xl border-2 font-extrabold text-xs transition-all cursor-pointer border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-md shadow-emerald-500/10';
+                btnPut.className = 'flex items-center justify-center gap-1 py-2.5 px-1.5 rounded-xl border-2 font-extrabold text-xs transition-all cursor-pointer border-slate-700/80 bg-dark-900/60 text-slate-400 hover:border-slate-600 hover:text-slate-200';
+            } else {
+                btnPut.className = 'flex items-center justify-center gap-1 py-2.5 px-1.5 rounded-xl border-2 font-extrabold text-xs transition-all cursor-pointer border-rose-500 bg-rose-500/15 text-rose-300 shadow-md shadow-rose-500/10';
+                btnCall.className = 'flex items-center justify-center gap-1 py-2.5 px-1.5 rounded-xl border-2 font-extrabold text-xs transition-all cursor-pointer border-slate-700/80 bg-dark-900/60 text-slate-400 hover:border-slate-600 hover:text-slate-200';
+            }
+            updateLivePreview();
+        };
+
+        // تحديث المعاينة الفورية
+        window.updateLivePreview = function() {
+            const buy = parseFloat(document.getElementById('buyPriceInput').value) || 0;
+            const sell = parseFloat(document.getElementById('sellPriceInput').value) || 0;
+            const comm = parseFloat(document.getElementById('commissionInput').value) || 0;
+
+            const net = sell - buy - comm;
+            const roi = buy > 0 ? ((net / buy) * 100) : 0;
+
+            const box = document.getElementById('livePreviewBox');
+            const amountEl = document.getElementById('livePreviewAmount');
+            const statusEl = document.getElementById('livePreviewStatus');
+            const roiEl = document.getElementById('liveTradeRoi');
+
+            amountEl.textContent = formatUSD(net, true);
+            roiEl.textContent = `${roi >= 0 ? '+' : ''}${roi.toFixed(1)}%`;
+
+            if (buy === 0 && sell === 0) {
+                box.className = 'flex-1 px-2.5 py-2 rounded-xl bg-dark-950/90 border border-slate-800 flex flex-col justify-center transition-all min-w-[100px]';
+                amountEl.className = 'text-sm sm:text-base font-black text-slate-300 truncate';
+                statusEl.className = 'text-[11px] sm:text-xs font-bold px-2.5 py-1 rounded-md bg-slate-800 text-slate-400';
+                statusEl.textContent = 'بانتظار الإدخال';
+            } else if (net > 0) {
+                box.className = 'flex-1 px-2.5 py-2 rounded-xl bg-emerald-950/40 border border-emerald-500/40 flex flex-col justify-center transition-all min-w-[100px]';
+                amountEl.className = 'text-sm sm:text-base font-black text-emerald-400 truncate';
+                statusEl.className = 'text-[11px] sm:text-xs font-bold px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-300';
+                statusEl.textContent = 'مكسب';
+            } else if (net < 0) {
+                box.className = 'flex-1 px-2.5 py-2 rounded-xl bg-rose-950/40 border border-rose-500/40 flex flex-col justify-center transition-all min-w-[100px]';
+                amountEl.className = 'text-sm sm:text-base font-black text-rose-400 truncate';
+                statusEl.className = 'text-[11px] sm:text-xs font-bold px-2.5 py-1 rounded-md bg-rose-500/20 text-rose-300';
+                statusEl.textContent = 'خسارة';
+            } else {
+                box.className = 'flex-1 px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-700 flex flex-col justify-center transition-all min-w-[100px]';
+                amountEl.className = 'text-sm sm:text-base font-black text-slate-200 truncate';
+                statusEl.className = 'text-[11px] sm:text-xs font-bold px-2.5 py-1 rounded-md bg-slate-800 text-slate-300';
+                statusEl.textContent = 'تعادل';
+            }
+        };
+
+        // مزامنة اختيار الشهر
+        window.syncFormMonthToFilter = function(monthKey) {
+            selectedMonth = monthKey;
+            selectedDay = 'ALL';
+            populateDaysDropdown(monthKey);
+            renderMonthTabs();
+            renderDayTabs();
+            renderTable();
+        };
+
+        window.selectMonthTab = function(monthKey) {
+            selectedMonth = monthKey;
+            selectedDay = 'ALL';
+            if (monthKey !== 'ALL') {
+                const selectEl = document.getElementById('tradeMonthSelect');
+                if (selectEl) selectEl.value = monthKey;
+                populateDaysDropdown(monthKey);
+            }
+            renderMonthTabs();
+            renderDayTabs();
+            renderTable();
+        };
+
+        window.selectDayTab = function(dayStr) {
+            selectedDay = dayStr;
+            if (dayStr !== 'ALL') {
+                const daySelect = document.getElementById('tradeDaySelect');
+                if (daySelect) daySelect.value = dayStr;
+            }
+            renderDayTabs();
+            renderTable();
+        };
+
+        window.toggleDaysViewMode = function() {
+            showAllMonthDays = !showAllMonthDays;
+            renderDayTabs();
+        };
+
+        // حساب عدد أيام الشهر وتعبئة قائمة الأيام في النموذج مع اسم اليوم
+        function getDaysInMonth(monthKey) {
+            if (!monthKey || monthKey === 'ALL') return 31;
+            const [y, m] = monthKey.split('-').map(Number);
+            return new Date(y, m, 0).getDate();
+        }
+
+        function getArabicWeekdayName(monthKey, dayNum) {
+            const [y, m] = monthKey.split('-').map(Number);
+            const dateObj = new Date(y, m - 1, dayNum);
+            return ARABIC_WEEKDAYS[dateObj.getDay()];
+        }
+
+        function populateDaysDropdown(monthKey) {
+            const daySelect = document.getElementById('tradeDaySelect');
+            if (!daySelect) return;
+            const prevVal = daySelect.value;
+            const totalDays = getDaysInMonth(monthKey);
+            const todayStr = new Date().getDate().toString().padStart(2, '0');
+
+            let optionsHtml = '';
+            for (let d = 1; d <= totalDays; d++) {
+                const dStr = d.toString().padStart(2, '0');
+                const dayName = getArabicWeekdayName(monthKey, d);
+                optionsHtml += `<option value="${dStr}">${d} (${dayName})</option>`;
+            }
+            daySelect.innerHTML = optionsHtml;
+
+            if (prevVal && parseInt(prevVal, 10) <= totalDays) {
+                daySelect.value = prevVal;
+            } else if (parseInt(todayStr, 10) <= totalDays) {
+                daySelect.value = todayStr;
+            }
+        }
+
+        // استخراج اليوم من الصفقة سواء كان مخزناً في day أو داخل date
+        function getTradeDay(trade) {
+            if (trade.day) return trade.day.toString().padStart(2, '0');
+            if (trade.date && trade.date.includes('/')) {
+                return trade.date.split('/')[0].padStart(2, '0');
+            }
+            return '01';
+        }
+
+        // إضافة صفقة جديدة للشركة والشهر واليوم المحدد
+        window.addTrade = function(event) {
+            event.preventDefault();
+
+            const symbol = document.getElementById('tradeSymbolSelect').value || 'SPX';
+            const month = document.getElementById('tradeMonthSelect').value;
+            const day = (document.getElementById('tradeDaySelect').value || '01').padStart(2, '0');
+            const type = document.getElementById('tradeTypeInput').value;
+            const buyPrice = parseFloat(document.getElementById('buyPriceInput').value) || 0;
+            const sellPrice = parseFloat(document.getElementById('sellPriceInput').value) || 0;
+            const commission = parseFloat(document.getElementById('commissionInput').value) || 0;
+
+            const [yearStr, monthStr] = month.split('-');
+            const now = new Date();
+            const formattedDate = `${day}/${monthStr}/${yearStr} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+            const newTrade = {
+                id: Date.now(),
+                symbol,
+                month,
+                day,
+                type,
+                buyPrice,
+                sellPrice,
+                commission,
+                date: formattedDate
+            };
+
+            appState.trades.unshift(newTrade);
+            selectedMonth = month;
+            saveState();
+
+            document.getElementById('buyPriceInput').value = '';
+            document.getElementById('sellPriceInput').value = '';
+            updateLivePreview();
+
+            renderAll();
+            const monthObj = MONTHS_LIST.find(m => m.key === month);
+            showToast(`تمت إضافة صفقة ${symbol} ليوم ${parseInt(day, 10)} ${monthObj ? monthObj.short : month}`);
+        };
+
+        // حذف صفقة
+        window.deleteTrade = function(id) {
+            appState.trades = appState.trades.filter(t => t.id !== id);
+            saveState();
+            renderAll();
+            showToast('تم حذف الصفقة');
+        };
+
+        // تصفير البيانات
+        window.confirmClearAll = function() {
+            const modal = document.getElementById('confirmModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+        window.closeConfirmModal = function() {
+            const modal = document.getElementById('confirmModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+        window.executeClearAll = function() {
+            appState.trades = [];
+            saveState();
+            closeConfirmModal();
+            renderAll();
+            showToast('تم تصفير جميع الصفقات');
+        };
+
+        // تصفية حسب الشركة / المؤشر
+        window.setSymbolFilter = function(symbol) {
+            selectedSymbolFilter = symbol;
+            renderTable();
+        };
+
+        // تصفية حسب نوع الصفقة أو النتيجة (الكل / CALL / PUT / رابحة / خاسرة)
+        window.setFilter = function(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.className = 'filter-btn py-2 px-2 sm:px-3 rounded-lg text-slate-400 hover:text-white transition-all cursor-pointer text-center';
+            });
+            const activeBtn = document.getElementById(`filter-${filter}`);
+            if (activeBtn) {
+                activeBtn.className = 'filter-btn py-2 px-2 sm:px-3 rounded-lg bg-blue-600 text-white shadow-xs transition-all cursor-pointer text-center';
+            }
+            renderTable();
+        };
+
+        // رسم أزرار الشهور بتصميم بطاقات أنيقة
+        function renderMonthTabs() {
+            const container = document.getElementById('monthsTabsContainer');
+            const selectEl = document.getElementById('tradeMonthSelect');
+            if (!container || !selectEl) return;
+
+            if (selectEl.options.length === 0) {
+                selectEl.innerHTML = MONTHS_LIST.map(m => `<option value="${m.key}">${m.label}</option>`).join('');
+                populateDaysDropdown(selectedMonth === 'ALL' ? '2026-11' : selectedMonth);
+            }
+            if (selectedMonth !== 'ALL') {
+                selectEl.value = selectedMonth;
+            }
+
+            const activeMonthObj = MONTHS_LIST.find(m => m.key === selectEl.value);
+            const badgeEl = document.getElementById('addingToMonthBadge');
+            if (badgeEl && activeMonthObj) {
+                badgeEl.textContent = `الشهر المحدد: ${activeMonthObj.label}`;
+            }
+
+            const allNet = appState.trades.reduce((s, t) => s + (t.sellPrice - t.buyPrice - t.commission), 0);
+            const allActive = selectedMonth === 'ALL';
+
+            let html = `
+                <button onclick="selectMonthTab('ALL')"
+                    class="flex flex-col items-start justify-between min-w-[96px] px-3 py-2 rounded-xl text-xs transition-all cursor-pointer shrink-0 border ${
+                        allActive
+                            ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white border-blue-400 shadow-lg shadow-blue-600/25'
+                            : 'bg-dark-900/90 text-slate-300 border-slate-800 hover:border-slate-700 hover:text-white'
+                    }">
+                    <div class="flex items-center justify-between w-full gap-2">
+                        <span class="font-extrabold">كل السنة</span>
+                        <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold ${allActive ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'}">${appState.trades.length}</span>
+                    </div>
+                    <span class="text-[11px] font-black mt-1 ${allActive ? 'text-blue-100' : (allNet >= 0 ? 'text-emerald-400' : 'text-rose-400')}" dir="ltr">${formatUSD(allNet, true)}</span>
+                </button>
+            `;
+
+            html += MONTHS_LIST.map(m => {
+                const mTrades = appState.trades.filter(t => t.month === m.key);
+                const mNet = mTrades.reduce((s, t) => s + (t.sellPrice - t.buyPrice - t.commission), 0);
+                const isActive = selectedMonth === m.key;
+
+                return `
+                    <button onclick="selectMonthTab('${m.key}')"
+                        class="flex flex-col items-start justify-between min-w-[96px] px-3 py-2 rounded-xl text-xs transition-all cursor-pointer shrink-0 border ${
+                            isActive
+                                ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white border-blue-400 shadow-lg shadow-blue-600/25'
+                                : 'bg-dark-900/90 text-slate-300 border-slate-800 hover:border-slate-700 hover:text-white'
+                        }">
+                        <div class="flex items-center justify-between w-full gap-2">
+                            <span class="font-extrabold">${m.short}</span>
+                            <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold ${isActive ? 'bg-white/20 text-white' : (mTrades.length > 0 ? 'bg-blue-500/15 text-blue-300' : 'bg-slate-800/80 text-slate-500')}">${mTrades.length}</span>
+                        </div>
+                        <span class="text-[11px] font-black mt-1 ${isActive ? 'text-blue-100' : (mNet > 0 ? 'text-emerald-400' : (mNet < 0 ? 'text-rose-400' : 'text-slate-500'))}" dir="ltr">${mTrades.length > 0 ? formatUSD(mNet, true) : '$0.00'}</span>
+                    </button>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+        }
+
+        // رسم بطاقات أيام الشهر المحدد (تقويم مصغر ذكي يعرض اسم اليوم وصافي الربح)
+        function renderDayTabs() {
+            const wrapper = document.getElementById('daysTabsWrapper');
+            const toggleBtn = document.getElementById('daysViewToggleBtn');
+            if (!wrapper) return;
+
+            if (selectedMonth === 'ALL') {
+                wrapper.classList.add('hidden');
+                if (toggleBtn) toggleBtn.classList.add('hidden');
+                return;
+            }
+
+            wrapper.classList.remove('hidden');
+            if (toggleBtn) {
+                toggleBtn.classList.remove('hidden');
+                toggleBtn.textContent = showAllMonthDays ? 'الأيام النشطة فقط' : `كل أيام الشهر (${getDaysInMonth(selectedMonth)})`;
+            }
+
+            const totalDays = getDaysInMonth(selectedMonth);
+            const monthTrades = appState.trades.filter(t => t.month === selectedMonth);
+            const allDaysActive = selectedDay === 'ALL';
+
+            let dayCards = [];
+            for (let d = 1; d <= totalDays; d++) {
+                const dStr = d.toString().padStart(2, '0');
+                const dayTrades = monthTrades.filter(t => getTradeDay(t) === dStr);
+                const hasTrades = dayTrades.length > 0;
+                const dayNet = dayTrades.reduce((s, t) => s + (t.sellPrice - t.buyPrice - t.commission), 0);
+                const weekdayName = getArabicWeekdayName(selectedMonth, d);
+
+                if (!showAllMonthDays && !hasTrades && selectedDay !== dStr) continue;
+
+                const isActive = selectedDay === dStr;
+                let cardStyle = 'bg-dark-900/60 text-slate-400 border-slate-800/80 hover:border-slate-700 hover:text-slate-200';
+                if (isActive) {
+                    cardStyle = 'bg-amber-500 text-slate-950 border-amber-300 shadow-md shadow-amber-500/25';
+                } else if (hasTrades) {
+                    cardStyle = dayNet >= 0
+                        ? 'bg-emerald-950/35 text-emerald-300 border-emerald-500/35 hover:bg-emerald-950/55'
+                        : 'bg-rose-950/35 text-rose-300 border-rose-500/35 hover:bg-rose-950/55';
+                }
+
+                dayCards.push(`
+                    <button onclick="selectDayTab('${dStr}')"
+                        class="flex flex-col items-center justify-center min-w-[68px] px-2 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 border ${cardStyle}">
+                        <span class="text-[10px] font-semibold ${isActive ? 'text-slate-900' : 'text-slate-400'}">${weekdayName}</span>
+                        <span class="text-sm font-black leading-tight my-0.5">${d}</span>
+                        <span class="text-[10px] font-extrabold ${isActive ? 'text-slate-950' : (hasTrades ? (dayNet >= 0 ? 'text-emerald-400' : 'text-rose-400') : 'text-slate-600')}" dir="ltr">
+                            ${hasTrades ? formatUSD(dayNet, true) : '—'}
+                        </span>
+                    </button>
+                `);
+            }
+
+            const html = `
+                <div class="flex items-stretch gap-2 overflow-x-auto no-scrollbar pb-0.5">
+                    <button onclick="selectDayTab('ALL')"
+                        class="flex flex-col items-center justify-center min-w-[78px] px-2.5 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 border ${
+                            allDaysActive
+                                ? 'bg-amber-500/20 text-amber-300 border-amber-400/60 shadow-sm'
+                                : 'bg-dark-900 text-slate-400 border-slate-800 hover:text-slate-200'
+                        }">
+                        <span class="text-[10px] font-bold">الشهر كامل</span>
+                        <span class="text-xs font-black my-0.5">الكل</span>
+                        <span class="text-[10px] font-bold px-1.5 rounded bg-slate-800/80 text-slate-300">${monthTrades.length} صفقات</span>
+                    </button>
+                    ${dayCards.length > 0 ? dayCards.join('') : '<div class="flex items-center px-3 text-xs text-slate-500">لا توجد أيام مسجلة بعد — اضغط "كل أيام الشهر" لإظهار جميع الأيام</div>'}
+                </div>
+            `;
+
+            wrapper.innerHTML = html;
+        }
+
+        // تحديث البطاقات الإحصائية العلوية
+        function renderKPIs() {
+            const totalTrades = appState.trades.length;
+            let totalNet = 0;
+            let totalComm = 0;
+            let winCount = 0;
+
+            appState.trades.forEach(t => {
+                const net = t.sellPrice - t.buyPrice - t.commission;
+                totalNet += net;
+                totalComm += t.commission;
+                if (net > 0) winCount++;
+            });
+
+            const currentBalance = appState.initialCapital + totalNet;
+            const roi = appState.initialCapital > 0 ? ((totalNet / appState.initialCapital) * 100) : 0;
+            const winRate = totalTrades > 0 ? Math.round((winCount / totalTrades) * 100) : 0;
+
+            document.getElementById('kpiCurrentBalance').textContent = formatUSD(currentBalance);
+            const netEl = document.getElementById('kpiNetProfit');
+            const roiEl = document.getElementById('kpiRoiBadge');
+            const iconBox = document.getElementById('kpiNetIconBox');
+
+            netEl.textContent = formatUSD(totalNet, true);
+            roiEl.textContent = `${roi >= 0 ? '+' : ''}${roi.toFixed(2)}%`;
+
+            if (totalNet >= 0) {
+                netEl.className = 'text-lg sm:text-2xl font-black text-emerald-400 tracking-tight mt-1.5 truncate';
+                roiEl.className = 'font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300';
+                iconBox.className = 'p-1.5 sm:p-2 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/20';
+            } else {
+                netEl.className = 'text-lg sm:text-2xl font-black text-rose-400 tracking-tight mt-1.5 truncate';
+                roiEl.className = 'font-extrabold px-1.5 py-0.5 rounded-md bg-rose-500/15 text-rose-300';
+                iconBox.className = 'p-1.5 sm:p-2 rounded-xl bg-rose-500/15 text-rose-400 border border-rose-500/20';
+            }
+
+            document.getElementById('kpiTotalTrades').textContent = totalTrades;
+            document.getElementById('kpiWinRate').textContent = `${winRate}%`;
+            document.getElementById('kpiTotalComm').textContent = `-${formatUSD(totalComm)}`;
+        }
+
+        // بناء جدول الصفقات وبطاقات الجوال وصف الإجماليات للشهر المحدد
+        function renderTable() {
+            const tbody = document.getElementById('tradesTableBody');
+            const tfoot = document.getElementById('tradesTableFoot');
+            const mobileContainer = document.getElementById('mobileTradesContainer');
+            const mobileSummary = document.getElementById('mobileSummaryFooter');
+            const emptyState = document.getElementById('emptyTableState');
+
+            const monthObj = MONTHS_LIST.find(m => m.key === selectedMonth);
+            const monthTitle = selectedMonth === 'ALL' ? 'كل الشهور' : (monthObj ? monthObj.label : selectedMonth);
+            const dayTitle = (selectedMonth !== 'ALL' && selectedDay !== 'ALL') ? ` — يوم ${parseInt(selectedDay, 10)}` : '';
+            const symTitle = selectedSymbolFilter === 'ALL' ? '' : ` (${selectedSymbolFilter})`;
+            const fullPeriodTitle = `${monthTitle}${dayTitle}`;
+
+            document.getElementById('tableMonthTitle').textContent = `سجل الصفقات${symTitle} — ${fullPeriodTitle}`;
+            document.getElementById('footSummaryLabel').textContent = `مجموع ${fullPeriodTitle}:`;
+            if (document.getElementById('mobileFootLabel')) {
+                document.getElementById('mobileFootLabel').textContent = `مجموع ${fullPeriodTitle}:`;
+            }
+
+            let filtered = selectedMonth === 'ALL'
+                ? [...appState.trades]
+                : appState.trades.filter(t => t.month === selectedMonth);
+
+            if (selectedMonth !== 'ALL' && selectedDay !== 'ALL') {
+                filtered = filtered.filter(t => getTradeDay(t) === selectedDay);
+            }
+
+            if (selectedSymbolFilter !== 'ALL') {
+                filtered = filtered.filter(t => (t.symbol || 'SPX') === selectedSymbolFilter);
+            }
+
+            const monthNetTotal = filtered.reduce((s, t) => s + (t.sellPrice - t.buyPrice - t.commission), 0);
+            const summaryBadge = document.getElementById('monthNetSummaryBadge');
+            summaryBadge.textContent = formatUSD(monthNetTotal, true);
+            summaryBadge.className = monthNetTotal >= 0
+                ? 'text-xs font-extrabold px-2.5 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/25'
+                : 'text-xs font-extrabold px-2.5 py-0.5 rounded-lg bg-rose-500/15 text-rose-300 border border-rose-500/25';
+
+            if (currentFilter === 'CALL') {
+                filtered = filtered.filter(t => t.type === 'CALL');
+            } else if (currentFilter === 'PUT') {
+                filtered = filtered.filter(t => t.type === 'PUT');
+            } else if (currentFilter === 'WIN') {
+                filtered = filtered.filter(t => (t.sellPrice - t.buyPrice - t.commission) > 0);
+            } else if (currentFilter === 'LOSS') {
+                filtered = filtered.filter(t => (t.sellPrice - t.buyPrice - t.commission) < 0);
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                if (mobileContainer) mobileContainer.innerHTML = '';
+                tfoot.classList.add('hidden');
+                if (mobileSummary) mobileSummary.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            tfoot.classList.remove('hidden');
+            if (mobileSummary) mobileSummary.classList.remove('hidden');
+
+            let totalBuy = 0;
+            let totalSell = 0;
+            let totalComm = 0;
+            let totalNet = 0;
+
+            tbody.innerHTML = filtered.map((trade, index) => {
+                const net = trade.sellPrice - trade.buyPrice - trade.commission;
+                totalBuy += trade.buyPrice;
+                totalSell += trade.sellPrice;
+                totalComm += trade.commission;
+                totalNet += net;
+
+                const isCall = trade.type === 'CALL';
+                const isWin = net > 0;
+                const isLoss = net < 0;
+                const tMonth = MONTHS_LIST.find(m => m.key === trade.month);
+                const symKey = trade.symbol || 'SPX';
+                const symInfo = SYMBOL_META[symKey] || { label: symKey, badge: 'bg-blue-500/15 text-blue-300 border-blue-400/30' };
+
+                return `
+                    <tr class="hover:bg-slate-800/40 transition-colors">
+                        <td class="py-3.5 px-3 text-center font-bold text-slate-400">${filtered.length - index}</td>
+                        <td class="py-3.5 px-3">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black border ${symInfo.badge}" dir="ltr">
+                                ${symInfo.label}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-3">
+                            <div class="font-bold text-slate-200">${tMonth ? tMonth.label : trade.month}</div>
+                            <div class="text-[11px] text-slate-400" dir="ltr">${trade.date || ''}</div>
+                        </td>
+                        <td class="py-3.5 px-3">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-extrabold ${
+                                isCall
+                                    ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                                    : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+                            }">
+                                <i data-lucide="${isCall ? 'trending-up' : 'trending-down'}" class="w-3.5 h-3.5"></i>
+                                ${trade.type}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-3 font-bold text-slate-200" dir="ltr">${formatUSD(trade.buyPrice)}</td>
+                        <td class="py-3.5 px-3 font-bold text-slate-200" dir="ltr">${formatUSD(trade.sellPrice)}</td>
+                        <td class="py-3.5 px-3 font-bold text-amber-400" dir="ltr">-${formatUSD(trade.commission)}</td>
+                        <td class="py-3.5 px-3 font-black ${isWin ? 'text-emerald-400' : (isLoss ? 'text-rose-400' : 'text-slate-300')}" dir="ltr">
+                            ${formatUSD(net, true)}
+                        </td>
+                        <td class="py-3.5 px-3 text-center no-print">
+                            <button onclick="deleteTrade(${trade.id})" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer" title="حذف الصفقة">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            if (mobileContainer) {
+                mobileContainer.innerHTML = filtered.map((trade, index) => {
+                    const net = trade.sellPrice - trade.buyPrice - trade.commission;
+                    const isCall = trade.type === 'CALL';
+                    const isWin = net > 0;
+                    const isLoss = net < 0;
+                    const tMonth = MONTHS_LIST.find(m => m.key === trade.month);
+                    const symKey = trade.symbol || 'SPX';
+                    const symInfo = SYMBOL_META[symKey] || { label: symKey, badge: 'bg-blue-500/15 text-blue-300 border-blue-400/30' };
+
+                    return `
+                        <div class="p-4 space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="text-xs font-bold text-slate-500">#${filtered.length - index}</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-black border ${symInfo.badge}" dir="ltr">
+                                        ${symInfo.label}
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-extrabold ${
+                                        isCall
+                                            ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                                            : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+                                    }">
+                                        ${trade.type}
+                                    </span>
+                                    <span class="text-xs font-bold text-slate-400">${tMonth ? tMonth.short : trade.month}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-black ${isWin ? 'text-emerald-400' : (isLoss ? 'text-rose-400' : 'text-slate-300')}" dir="ltr">
+                                        ${formatUSD(net, true)}
+                                    </span>
+                                    <button onclick="deleteTrade(${trade.id})" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 bg-dark-900 border border-slate-800 cursor-pointer" title="حذف">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 text-center bg-dark-950/70 p-2 rounded-xl border border-slate-800/80 text-xs">
+                                <div>
+                                    <div class="text-[10px] text-slate-400">الشراء</div>
+                                    <div class="font-bold text-slate-200 mt-0.5" dir="ltr">${formatUSD(trade.buyPrice)}</div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] text-slate-400">البيع</div>
+                                    <div class="font-bold text-slate-200 mt-0.5" dir="ltr">${formatUSD(trade.sellPrice)}</div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] text-slate-400">العمولة</div>
+                                    <div class="font-bold text-amber-400 mt-0.5" dir="ltr">-${formatUSD(trade.commission)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // تحديث صف الإجماليات للكمبيوتر
+            document.getElementById('footTradeCount').textContent = `${filtered.length} صفقات`;
+            document.getElementById('footTotalBuy').textContent = formatUSD(totalBuy);
+            document.getElementById('footTotalSell').textContent = formatUSD(totalSell);
+            document.getElementById('footTotalComm').textContent = `-${formatUSD(totalComm)}`;
+            const footNetEl = document.getElementById('footTotalNet');
+            footNetEl.textContent = formatUSD(totalNet, true);
+            footNetEl.className = `py-4 px-3 text-base font-black ${totalNet >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+
+            // تحديث صف الإجماليات للجوال
+            document.getElementById('mobileFootCount').textContent = `${filtered.length} صفقات`;
+            document.getElementById('mobileFootBuy').textContent = formatUSD(totalBuy);
+            document.getElementById('mobileFootSell').textContent = formatUSD(totalSell);
+            const mFootNet = document.getElementById('mobileFootNet');
+            mFootNet.textContent = formatUSD(totalNet, true);
+            mFootNet.className = `font-black ${totalNet >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+
+            lucide.createIcons();
+        }
+
+        // رسم المنحنيات البيانية
+        function renderCharts() {
+            const chronological = [...appState.trades].reverse();
+            const labels = ['البداية'];
+            const balances = [appState.initialCapital];
+            let running = appState.initialCapital;
+
+            chronological.forEach((t, idx) => {
+                running += (t.sellPrice - t.buyPrice - t.commission);
+                labels.push(`#${idx + 1} ${t.symbol || 'SPX'}`);
+                balances.push(running);
+            });
+
+            const eqCtx = document.getElementById('equityChart');
+            if (eqCtx) {
+                if (equityChartInstance) equityChartInstance.destroy();
+                const isUp = running >= appState.initialCapital;
+                const lineColor = isUp ? '#10B981' : '#F43F5E';
+
+                equityChartInstance = new Chart(eqCtx, {
+                    type: 'line',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: 'رصيد المحفظة ($)',
+                            data: balances,
+                            borderColor: lineColor,
+                            backgroundColor: isUp ? 'rgba(16, 185, 129, 0.12)' : 'rgba(244, 63, 94, 0.12)',
+                            borderWidth: 2.5,
+                            fill: true,
+                            tension: 0.35,
+                            pointRadius: 3,
+                            pointBackgroundColor: lineColor
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: '#94A3B8', font: { size: 10 } },
+                                grid: { color: 'rgba(51, 65, 85, 0.25)' }
+                            },
+                            y: {
+                                ticks: { color: '#94A3B8', font: { size: 10 } },
+                                grid: { color: 'rgba(51, 65, 85, 0.25)' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // توزيع CALL مقابل PUT
+            let callCount = 0, callNet = 0, putCount = 0, putNet = 0;
+            appState.trades.forEach(t => {
+                const net = t.sellPrice - t.buyPrice - t.commission;
+                if (t.type === 'CALL') {
+                    callCount++;
+                    callNet += net;
+                } else {
+                    putCount++;
+                    putNet += net;
+                }
+            });
+
+            document.getElementById('callCountBadge').textContent = callCount;
+            document.getElementById('callNetText').textContent = formatUSD(callNet, true);
+            document.getElementById('putCountBadge').textContent = putCount;
+            document.getElementById('putNetText').textContent = formatUSD(putNet, true);
+
+            const distCtx = document.getElementById('distributionChart');
+            if (distCtx) {
+                if (distributionChartInstance) distributionChartInstance.destroy();
+                distributionChartInstance = new Chart(distCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['CALL', 'PUT'],
+                        datasets: [{
+                            data: [callCount || 1, putCount || 0],
+                            backgroundColor: ['#10B981', '#F43F5E'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: '#CBD5E1', font: { family: 'Cairo', size: 11 } }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // تصدير السجل إلى ملف CSV متوافق مع Excel
+        window.exportToCSV = function() {
+            if (appState.trades.length === 0) {
+                showToast('لا توجد صفقات لتصديرها');
+                return;
+            }
+            const headers = ['الشركة', 'الشهر', 'التاريخ', 'نوع الصفقة', 'سعر الشراء', 'سعر البيع', 'العمولة', 'صافي الربح/الخسارة'];
+            const rows = appState.trades.map(t => {
+                const net = (t.sellPrice - t.buyPrice - t.commission).toFixed(2);
+                const mObj = MONTHS_LIST.find(m => m.key === t.month);
+                return [
+                    t.symbol || 'SPX',
+                    mObj ? mObj.label : t.month,
+                    t.date || '',
+                    t.type,
+                    t.buyPrice.toFixed(2),
+                    t.sellPrice.toFixed(2),
+                    t.commission.toFixed(2),
+                    net
+                ].join(',');
+            });
+
+            const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `options_portfolio_${new Date().toISOString().slice(0, 10)}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+            showToast('تم تصدير ملف Excel بنجاح');
+        };
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = msg;
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 2600);
+        }
+
+        function renderAll() {
+            renderMonthTabs();
+            renderDayTabs();
+            renderKPIs();
+            renderTable();
+            renderCharts();
+            lucide.createIcons();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initCloudSync();
+        });
+    </script>
+</body>
+</html>
