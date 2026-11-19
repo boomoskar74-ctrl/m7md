@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>M7MD ALHWITI • ادارة عشوائية</title>
@@ -12,6 +12,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- مكتبة EmailJS لإرسال كود الاستعادة إلى البريد الإلكتروني -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -48,6 +50,7 @@
             color: #F8FAFC;
             font-family: 'Cairo', sans-serif;
             -webkit-tap-highlight-color: transparent;
+            scroll-behavior: smooth;
         }
         @media screen and (max-width: 768px) {
             input, select, textarea { font-size: 16px !important; }
@@ -57,14 +60,16 @@
         input[type="number"] { -moz-appearance: textfield; }
 
         .cyber-panel {
-            background: linear-gradient(160deg, rgba(19, 28, 49, 0.78) 0%, rgba(8, 12, 22, 0.94) 100%);
+            background: linear-gradient(160deg, rgba(19, 28, 49, 0.82) 0%, rgba(8, 12, 22, 0.95) 100%);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(56, 189, 248, 0.14);
             box-shadow: 0 10px 35px -10px rgba(0, 0, 0, 0.75);
         }
         .cyber-panel-gold {
-            background: linear-gradient(160deg, rgba(24, 24, 32, 0.85) 0%, rgba(10, 12, 20, 0.96) 100%);
+            background: linear-gradient(160deg, rgba(24, 24, 32, 0.88) 0%, rgba(10, 12, 20, 0.96) 100%);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(251, 191, 36, 0.28);
             box-shadow: 0 10px 40px -12px rgba(245, 158, 11, 0.15);
         }
@@ -77,6 +82,7 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .num-font { font-family: 'JetBrains Mono', monospace; }
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             20%, 60% { transform: translateX(-8px); }
@@ -85,7 +91,7 @@
         .animate-shake { animation: shake 0.35s ease-in-out; }
     </style>
 </head>
-<body class="min-h-screen antialiased selection:bg-amber-500/30 selection:text-amber-200 pb-12 grid-bg">
+<body class="min-h-screen antialiased selection:bg-amber-500/30 selection:text-amber-200 pb-24 lg:pb-12 grid-bg">
 
     <!-- إضاءات نيون محيطية -->
     <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
@@ -95,19 +101,20 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- شاشة تسجيل الدخول (تظهر قبل فتح الموقع وتختفي تلقائياً لمدة أسبوع)    -->
+    <!-- شاشة تسجيل الدخول + استعادة الحساب عبر البريد الإلكتروني             -->
     <!-- ===================================================================== -->
-    <div id="loginGateScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-obsidian-950/95 backdrop-blur-2xl p-4 grid-bg">
-        <div id="loginCardBox" class="cyber-panel-gold rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6">
+    <div id="loginGateScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-obsidian-950/95 backdrop-blur-2xl p-4 grid-bg overflow-y-auto">
+        <div id="loginCardBox" class="cyber-panel-gold rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6 my-auto">
             <div class="text-center space-y-2">
                 <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-600 shadow-lg shadow-amber-500/25 text-obsidian-950 mx-auto mb-1">
                     <i data-lucide="shield-check" class="w-7 h-7 stroke-[2.5]"></i>
                 </div>
                 <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white num-font uppercase" dir="ltr">M7MD <span class="text-amber-400">ALHWITI</span></h1>
-                <p class="text-xs text-slate-400 font-semibold">بوابة الدخول الخاصة • ادخل بياناتك للمتابعة</p>
+                <p id="authSubtitleText" class="text-xs text-slate-400 font-semibold">بوابة الدخول الخاصة • ادخل بياناتك للمتابعة</p>
             </div>
 
-            <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
+            <!-- 1. نموذج تسجيل الدخول الأساسي -->
+            <form id="loginFormView" onsubmit="handleLoginSubmit(event)" class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-300 mb-1.5">اسم المستخدم</label>
                     <div class="relative">
@@ -115,18 +122,23 @@
                             <i data-lucide="user" class="w-4 h-4"></i>
                         </span>
                         <input type="text" id="loginUsernameInput" required autocomplete="username" placeholder="اسم المستخدم" dir="ltr"
-                            class="w-full h-11 pr-10 pl-3.5 bg-obsidian-950 border border-slate-700 focus:border-amber-400 rounded-xl text-sm font-bold text-white num-font outline-none transition-colors">
+                            class="w-full h-12 pr-10 pl-3.5 bg-obsidian-950 border border-slate-700 focus:border-amber-400 rounded-xl text-sm font-bold text-white num-font outline-none transition-colors">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1.5">كلمة المرور</label>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-bold text-slate-300">كلمة المرور</label>
+                        <button type="button" onclick="openRecoveryView()" class="text-[11px] font-extrabold text-amber-400 hover:text-amber-300 underline underline-offset-4 cursor-pointer">
+                            نسيت الاسم أو كلمة المرور؟
+                        </button>
+                    </div>
                     <div class="relative">
                         <span class="absolute inset-y-0 right-3 flex items-center text-slate-500 pointer-events-none">
                             <i data-lucide="key-round" class="w-4 h-4"></i>
                         </span>
                         <input type="password" id="loginPasswordInput" required autocomplete="current-password" placeholder="•••••••••" dir="ltr"
-                            class="w-full h-11 pr-10 pl-10 bg-obsidian-950 border border-slate-700 focus:border-amber-400 rounded-xl text-sm font-bold text-white num-font outline-none transition-colors">
+                            class="w-full h-12 pr-10 pl-10 bg-obsidian-950 border border-slate-700 focus:border-amber-400 rounded-xl text-sm font-bold text-white num-font outline-none transition-colors">
                         <button type="button" onclick="toggleLoginPasswordVisibility()" class="absolute inset-y-0 left-3 flex items-center text-slate-400 hover:text-amber-300 cursor-pointer" title="إظهار / إخفاء كلمة المرور">
                             <i id="loginEyeIcon" data-lucide="eye" class="w-4 h-4"></i>
                         </button>
@@ -151,82 +163,148 @@
                     <span>تسجيل الدخول</span>
                 </button>
             </form>
+
+            <!-- 2. شاشة استعادة الحساب وإرسال كود للإيميل -->
+            <div id="recoveryView" class="hidden space-y-4">
+                <form id="recoveryStepEmail" onsubmit="sendRecoveryCodeToEmail(event)" class="space-y-4">
+                    <div class="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/25 text-xs text-cyan-200 leading-relaxed">
+                        أدخل بريدك الإلكتروني المسجل لإرسال رمز تحقق مكوّن من 6 أرقام لاستعادة اسم المستخدم وتعيين كلمة سر جديدة.
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1.5">البريد الإلكتروني المسجل</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 right-3 flex items-center text-slate-500 pointer-events-none">
+                                <i data-lucide="mail" class="w-4 h-4"></i>
+                            </span>
+                            <input type="email" id="recoveryEmailInput" required placeholder="name@example.com" dir="ltr"
+                                class="w-full h-12 pr-10 pl-3.5 bg-obsidian-950 border border-slate-700 focus:border-cyan-400 rounded-xl text-sm font-bold text-white num-font outline-none transition-colors">
+                        </div>
+                    </div>
+
+                    <div id="recoveryErrorBox" class="hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-xs font-bold text-rose-300 flex items-center gap-2">
+                        <i data-lucide="alert-circle" class="w-4 h-4 text-rose-400 shrink-0"></i>
+                        <span id="recoveryErrorText">البريد الإلكتروني غير مطابق للبريد المسجل!</span>
+                    </div>
+
+                    <button type="submit" id="sendCodeBtn"
+                        class="w-full h-12 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-xs sm:text-sm rounded-xl shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        <span>إرسال كود التحقق إلى الإيميل</span>
+                    </button>
+                </form>
+
+                <form id="recoveryStepReset" onsubmit="verifyCodeAndResetPassword(event)" class="hidden space-y-4">
+                    <div class="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-xs text-emerald-200 flex items-center justify-between">
+                        <span>تم إرسال الكود إلى بريدك بنجاح</span>
+                        <span class="font-black text-amber-300 num-font" dir="ltr" id="recoveredUsernameHint">User: kaboom</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-amber-300 mb-1.5">رمز التحقق (6 أرقام)</label>
+                        <input type="text" id="otpCodeInput" required maxlength="6" inputmode="numeric" placeholder="000000" dir="ltr"
+                            class="w-full h-12 px-3.5 bg-obsidian-950 border border-amber-500/40 focus:border-amber-400 rounded-xl text-lg font-black text-center tracking-[0.4em] text-amber-300 num-font outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1.5">اسم المستخدم (يمكنك تعديله أو تركه)</label>
+                        <input type="text" id="newUsernameInput" required dir="ltr"
+                            class="w-full h-12 px-3.5 bg-obsidian-950 border border-slate-700 focus:border-cyan-400 rounded-xl text-sm font-bold text-white num-font outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1.5">كلمة المرور الجديدة</label>
+                        <input type="text" id="newPasswordInput" required minlength="4" placeholder="اكتب كلمة السر الجديدة" dir="ltr"
+                            class="w-full h-12 px-3.5 bg-obsidian-950 border border-slate-700 focus:border-emerald-400 rounded-xl text-sm font-bold text-emerald-300 num-font outline-none">
+                    </div>
+
+                    <div id="otpErrorBox" class="hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-xs font-bold text-rose-300 flex items-center gap-2">
+                        <i data-lucide="alert-circle" class="w-4 h-4 text-rose-400 shrink-0"></i>
+                        <span id="otpErrorText">رمز التحقق غير صحيح!</span>
+                    </div>
+
+                    <button type="submit"
+                        class="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-obsidian-950 font-black text-xs sm:text-sm rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer">
+                        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                        <span>حفظ البيانات الجديدة والدخول</span>
+                    </button>
+                </form>
+
+                <button type="button" onclick="backToLoginView()" class="w-full py-2 text-xs font-bold text-slate-400 hover:text-white flex items-center justify-center gap-1.5 cursor-pointer">
+                    <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    <span>العودة لتسجيل الدخول</span>
+                </button>
+            </div>
         </div>
     </div>
 
     <!-- ===================================================================== -->
-    <!-- محتوى التطبيق الرئيسي (مخفي حتى يتم تسجيل الدخول بنجاح)              -->
+    <!-- محتوى التطبيق الرئيسي                                                 -->
     <!-- ===================================================================== -->
     <div id="protectedAppWrapper" class="hidden">
-
-        <!-- الشريط العلوي الفاخر (Command Bar + القائمة الرئيسية من 3 صفحات) -->
+        <!-- الشريط العلوي المتجاوب -->
         <header class="sticky top-0 z-30 border-b border-slate-800/80 bg-obsidian-950/90 backdrop-blur-2xl">
-            <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                    <!-- الهوية والشعار -->
-                    <div class="flex items-center gap-3">
-                        <div class="relative flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-600 shadow-lg shadow-amber-500/25 text-obsidian-950 shrink-0">
-                            <i data-lucide="crown" class="w-6 h-6 stroke-[2.5]"></i>
+            <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3">
+                <div class="flex items-center justify-between gap-2">
+                    <!-- الشعار والحالة -->
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-600 shadow-lg shadow-amber-500/25 text-obsidian-950 shrink-0">
+                            <i data-lucide="crown" class="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]"></i>
                         </div>
-                        <div>
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <h1 class="text-base sm:text-xl font-black tracking-tight text-white num-font uppercase" dir="ltr">M7MD <span class="text-amber-400">ALHWITI</span></h1>
-                                <span id="cloudSyncBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold bg-amber-500/15 text-amber-300 border border-amber-400/30">
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <h1 class="text-sm sm:text-xl font-black tracking-tight text-white num-font uppercase truncate" dir="ltr">M7MD <span class="text-amber-400">ALHWITI</span></h1>
+                                <span id="cloudSyncBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold bg-amber-500/15 text-amber-300 border border-amber-400/30 shrink-0">
                                     <span id="cloudSyncDot" class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                                    <span id="cloudSyncText">جاري الاتصال بالسحابة...</span>
+                                    <span id="cloudSyncText" class="hidden sm:inline">جاري الاتصال...</span>
+                                    <span id="cloudSyncShortText" class="sm:hidden">مزامنة</span>
                                 </span>
                             </div>
-                            <p class="text-[11px] sm:text-xs text-slate-400 font-semibold mt-0.5">ادارة عشوائية • مزامنة تلقائية بين الأجهزة</p>
+                            <p class="text-[10px] sm:text-xs text-slate-400 font-semibold truncate">ادارة عشوائية • مزامنة لحظية</p>
                         </div>
                     </div>
 
-                    <!-- قائمة التنقل بين الصفحات الثلاث (Navigation Menu) -->
-                    <nav class="flex items-center gap-1.5 bg-obsidian-900/95 p-1.5 rounded-2xl border border-slate-800 order-3 lg:order-2 w-full lg:w-auto justify-center">
+                    <!-- قائمة التنقل لسطح المكتب (تختفي في الجوال لأن لها شريط سفلي مريح) -->
+                    <nav class="hidden lg:flex items-center gap-1.5 bg-obsidian-900/95 p-1.5 rounded-2xl border border-slate-800">
                         <button onclick="switchPage('trades')" id="nav-btn-trades"
-                            class="flex-1 lg:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer bg-gradient-to-r from-amber-500 to-orange-500 text-obsidian-950 shadow-lg shadow-amber-500/20">
+                            class="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-sm font-black transition-all cursor-pointer bg-gradient-to-r from-amber-500 to-orange-500 text-obsidian-950 shadow-lg shadow-amber-500/20">
                             <i data-lucide="candlestick-chart" class="w-4 h-4"></i>
                             <span>سجل الصفقات</span>
                         </button>
                         <button onclick="switchPage('portfolio')" id="nav-btn-portfolio"
-                            class="flex-1 lg:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer text-slate-300 hover:text-white hover:bg-obsidian-800">
+                            class="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-sm font-extrabold transition-all cursor-pointer text-slate-300 hover:text-white hover:bg-obsidian-800">
                             <i data-lucide="wallet" class="w-4 h-4 text-emerald-400"></i>
                             <span>المحفظة والأداء</span>
                         </button>
                         <button onclick="switchPage('resources')" id="nav-btn-resources"
-                            class="flex-1 lg:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer text-slate-300 hover:text-white hover:bg-obsidian-800">
+                            class="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-sm font-extrabold transition-all cursor-pointer text-slate-300 hover:text-white hover:bg-obsidian-800">
                             <i data-lucide="newspaper" class="w-4 h-4 text-cyan-400"></i>
                             <span>الأخبار والشروحات</span>
                         </button>
                     </nav>
 
-                    <!-- أزرار التحكم السريعة + زر الخروج -->
-                    <div class="flex items-center gap-1.5 sm:gap-2 justify-end flex-wrap order-2 lg:order-3">
-                        <div id="portfolioHeaderActions" class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                            <button onclick="openGoalsModal()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-extrabold rounded-xl bg-amber-500/15 text-amber-300 border border-amber-400/30 hover:bg-amber-500/25 transition-all cursor-pointer">
-                                <i data-lucide="target" class="w-4 h-4 text-amber-400"></i>
-                                <span>الأهداف</span>
-                            </button>
-                            <button onclick="exportBackupJSON()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 hover:bg-cyan-500/20 transition-all cursor-pointer" title="حفظ نسخة احتياطية">
-                                <i data-lucide="download" class="w-4 h-4 text-cyan-400"></i>
-                                <span class="hidden sm:inline">نسخة احتياطية</span>
-                                <span class="sm:hidden">حفظ</span>
-                            </button>
-                            <button onclick="document.getElementById('restoreFileInput').click()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-purple-500/10 text-purple-300 border border-purple-500/25 hover:bg-purple-500/20 transition-all cursor-pointer" title="استعادة نسخة احتياطية">
-                                <i data-lucide="upload" class="w-4 h-4 text-purple-400"></i>
-                                <span class="hidden sm:inline">استعادة</span>
-                            </button>
-                            <input type="file" id="restoreFileInput" accept=".json" class="hidden" onchange="importBackupJSON(event)">
-                            <button onclick="exportToCSV()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-obsidian-800 text-slate-200 border border-slate-700/80 hover:bg-obsidian-700 transition-all cursor-pointer" title="تصدير Excel">
-                                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i>
-                                <span class="hidden sm:inline">Excel</span>
-                            </button>
-                            <button onclick="confirmClearAll()" class="inline-flex items-center justify-center p-2 text-xs font-bold rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/25 hover:bg-rose-500/20 transition-all cursor-pointer" title="تصفير السجل">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-
-                        <!-- زر تسجيل الخروج وقفل الموقع -->
-                        <button onclick="handleLogout()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-extrabold rounded-xl bg-slate-800/90 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border border-slate-700 hover:border-rose-500/35 transition-all cursor-pointer" title="تسجيل الخروج وقفل الموقع">
+                    <!-- أدوات التحكم السريعة -->
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button onclick="openGoalsModal()" class="inline-flex items-center justify-center gap-1 p-2 sm:px-3 sm:py-2 text-xs font-extrabold rounded-xl bg-amber-500/15 text-amber-300 border border-amber-400/30 hover:bg-amber-500/25 transition-all cursor-pointer" title="الأهداف">
+                            <i data-lucide="target" class="w-4 h-4 text-amber-400"></i>
+                            <span class="hidden sm:inline">الأهداف</span>
+                        </button>
+                        <button onclick="exportBackupJSON()" class="inline-flex items-center justify-center gap-1 p-2 sm:px-3 sm:py-2 text-xs font-bold rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 hover:bg-cyan-500/20 transition-all cursor-pointer" title="نسخة احتياطية">
+                            <i data-lucide="download" class="w-4 h-4 text-cyan-400"></i>
+                            <span class="hidden md:inline">نسخة احتياطية</span>
+                        </button>
+                        <button onclick="document.getElementById('restoreFileInput').click()" class="inline-flex items-center justify-center gap-1 p-2 sm:px-3 sm:py-2 text-xs font-bold rounded-xl bg-purple-500/10 text-purple-300 border border-purple-500/25 hover:bg-purple-500/20 transition-all cursor-pointer" title="استعادة">
+                            <i data-lucide="upload" class="w-4 h-4 text-purple-400"></i>
+                            <span class="hidden md:inline">استعادة</span>
+                        </button>
+                        <input type="file" id="restoreFileInput" accept=".json" class="hidden" onchange="importBackupJSON(event)">
+                        <button onclick="exportToCSV()" class="hidden sm:inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-bold rounded-xl bg-obsidian-800 text-slate-200 border border-slate-700/80 hover:bg-obsidian-700 transition-all cursor-pointer" title="تصدير Excel">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i>
+                            <span class="hidden md:inline">Excel</span>
+                        </button>
+                        <button onclick="confirmClearAll()" class="inline-flex items-center justify-center p-2 text-xs font-bold rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/25 hover:bg-rose-500/20 transition-all cursor-pointer" title="تصفير السجل">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="handleLogout()" class="inline-flex items-center justify-center gap-1 p-2 sm:px-3 sm:py-2 text-xs font-extrabold rounded-xl bg-slate-800/90 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border border-slate-700 hover:border-rose-500/35 transition-all cursor-pointer" title="خروج">
                             <i data-lucide="log-out" class="w-4 h-4 text-rose-400"></i>
                             <span class="hidden sm:inline">خروج</span>
                         </button>
@@ -236,13 +314,35 @@
         </header>
 
         <!-- ===================================================================== -->
-        <!-- الصفحة الأولى: سجل الصفقات (تسجيل الصفقات + سجل الصفقات فقط)          -->
+        <!-- شريط التنقل السفلي للجوال (Bottom Bar) لسهولة الاستخدام بيد واحدة       -->
         <!-- ===================================================================== -->
-        <main id="page-trades" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-5 space-y-6">
+        <nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-obsidian-950/95 backdrop-blur-2xl border-t border-slate-800/90 safe-bottom shadow-[0_-8px_30px_rgba(0,0,0,0.75)]">
+            <div class="grid grid-cols-3 gap-1 p-1.5 max-w-md mx-auto">
+                <button onclick="switchPage('trades')" id="mobile-nav-trades"
+                    class="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-black transition-all cursor-pointer bg-amber-500/15 text-amber-300 border border-amber-400/30">
+                    <i data-lucide="candlestick-chart" class="w-5 h-5 text-amber-400"></i>
+                    <span>سجل الصفقات</span>
+                </button>
+                <button onclick="switchPage('portfolio')" id="mobile-nav-portfolio"
+                    class="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer text-slate-400 hover:text-white border border-transparent">
+                    <i data-lucide="wallet" class="w-5 h-5"></i>
+                    <span>المحفظة والأداء</span>
+                </button>
+                <button onclick="switchPage('resources')" id="mobile-nav-resources"
+                    class="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer text-slate-400 hover:text-white border border-transparent">
+                    <i data-lucide="newspaper" class="w-5 h-5"></i>
+                    <span>الأخبار والشروحات</span>
+                </button>
+            </div>
+        </nav>
 
-            <!-- 1. منصة إدخال الصفقة السريعة -->
-            <section class="cyber-panel rounded-2xl p-4 sm:p-5 border-emerald-500/25">
-                <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-800/80">
+        <!-- ===================================================================== -->
+        <!-- الصفحة الأولى: سجل الصفقات                                            -->
+        <!-- ===================================================================== -->
+        <main id="page-trades" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-5 space-y-5 sm:space-y-6">
+            <!-- نموذج تسجيل صفقة جديدة (CALL & PUT في أقصى اليمين) -->
+            <section class="cyber-panel rounded-2xl p-3.5 sm:p-5 border-emerald-500/25">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3.5 pb-3 border-b border-slate-800/80">
                     <div class="flex items-center gap-2">
                         <div class="p-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
                             <i data-lucide="zap" class="w-4 h-4"></i>
@@ -250,21 +350,44 @@
                         <h3 class="text-sm sm:text-base font-black text-white">تسجيل صفقة جديدة</h3>
                         <span id="addingToMonthBadge" class="inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-cyan-500/10 text-cyan-300 border border-cyan-500/25">نوفمبر 2026</span>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span id="headerFeeBadge" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/25 num-font" dir="ltr">Fee: $4.85 / عقد</span>
-                        <div id="livePreviewStatus" class="text-xs font-extrabold px-3 py-1 rounded-lg bg-slate-800/90 text-slate-400">بانتظار السعر</div>
+                    <div class="flex items-center gap-1.5 sm:gap-2">
+                        <span id="headerFeeBadge" class="text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/25 num-font" dir="ltr">Fee: $4.85</span>
+                        <div id="livePreviewStatus" class="text-[11px] sm:text-xs font-extrabold px-2.5 py-1 rounded-lg bg-slate-800/90 text-slate-400">بانتظار السعر</div>
                     </div>
                 </div>
 
-                <form id="tradeForm" onsubmit="addTrade(event)" class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5">
+                <form id="tradeForm" onsubmit="addTrade(event)" class="space-y-3.5 sm:space-y-4">
+                    <!-- الصف الأول: نوع العقد (CALL / PUT) في اليمين أولاً، يليه المؤشر ثم التاريخ -->
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-3.5">
+                        <!-- 1. نوع العقد (في أقصى اليمين) -->
+                        <div class="md:col-span-4">
+                            <label class="flex items-center gap-1.5 text-xs font-bold text-slate-300 mb-1.5">
+                                <i data-lucide="arrow-left-right" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                <span>نوع العقد (CALL / PUT)</span>
+                            </label>
+                            <div class="grid grid-cols-2 gap-2.5 h-12 sm:h-11">
+                                <button type="button" id="btnCall" onclick="selectTradeType('CALL')"
+                                    class="flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-sm transition-all cursor-pointer active:scale-95 border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-md shadow-emerald-500/10">
+                                    <i data-lucide="trending-up" class="w-4 h-4"></i>
+                                    <span>CALL</span>
+                                </button>
+                                <button type="button" id="btnPut" onclick="selectTradeType('PUT')"
+                                    class="flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-sm transition-all cursor-pointer active:scale-95 border-slate-700/80 bg-obsidian-950 text-slate-400 hover:text-slate-200">
+                                    <i data-lucide="trending-down" class="w-4 h-4"></i>
+                                    <span>PUT</span>
+                                </button>
+                            </div>
+                            <input type="hidden" id="tradeTypeInput" value="CALL">
+                        </div>
+
+                        <!-- 2. المؤشر / السهم -->
                         <div class="md:col-span-3">
                             <label class="flex items-center gap-1.5 text-xs font-bold text-slate-300 mb-1.5">
                                 <i data-lucide="candlestick-chart" class="w-3.5 h-3.5 text-cyan-400"></i>
                                 <span>المؤشر / السهم</span>
                             </label>
                             <select id="tradeSymbolSelect"
-                                class="w-full h-11 px-3.5 bg-obsidian-950 border border-slate-700/90 hover:border-slate-600 rounded-xl text-sm font-extrabold text-cyan-300 focus:outline-none focus:border-cyan-400 transition-colors cursor-pointer">
+                                class="w-full h-12 sm:h-11 px-3.5 bg-obsidian-950 border border-slate-700/90 hover:border-slate-600 rounded-xl text-sm font-extrabold text-cyan-300 focus:outline-none focus:border-cyan-400 transition-colors cursor-pointer">
                                 <option value="SPX">SPX • S&P 500</option>
                                 <option value="SPY">SPY • SPDR ETF</option>
                                 <option value="NDX">NDX • Nasdaq 100</option>
@@ -273,84 +396,66 @@
                             </select>
                         </div>
 
+                        <!-- 3. تاريخ الصفقة -->
                         <div class="md:col-span-5">
                             <label class="flex items-center gap-1.5 text-xs font-bold text-slate-300 mb-1.5">
                                 <i data-lucide="calendar" class="w-3.5 h-3.5 text-amber-400"></i>
                                 <span>تاريخ الصفقة (الشهر واليوم)</span>
                             </label>
                             <div class="grid grid-cols-12 gap-2 p-1 bg-obsidian-950 border border-slate-700/90 rounded-xl">
-                                <div class="col-span-7">
+                                <div class="col-span-6 sm:col-span-7">
                                     <select id="tradeMonthSelect" onchange="syncFormMonthToFilter(this.value)"
-                                        class="w-full h-9 px-3 bg-obsidian-900/90 hover:bg-obsidian-800 border border-slate-800 rounded-lg text-xs sm:text-sm font-extrabold text-blue-300 focus:outline-none focus:border-blue-400 transition-colors cursor-pointer">
+                                        class="w-full h-10 sm:h-9 px-2.5 bg-obsidian-900/90 hover:bg-obsidian-800 border border-slate-800 rounded-lg text-xs sm:text-sm font-extrabold text-blue-300 focus:outline-none focus:border-blue-400 transition-colors cursor-pointer">
                                     </select>
                                 </div>
-                                <div class="col-span-5">
+                                <div class="col-span-6 sm:col-span-5">
                                     <select id="tradeDaySelect"
-                                        class="w-full h-9 px-2.5 bg-obsidian-900/90 hover:bg-obsidian-800 border border-slate-800 rounded-lg text-xs sm:text-sm font-extrabold text-amber-300 text-center focus:outline-none focus:border-amber-400 transition-colors cursor-pointer">
+                                        class="w-full h-10 sm:h-9 px-2 bg-obsidian-900/90 hover:bg-obsidian-800 border border-slate-800 rounded-lg text-xs sm:text-sm font-extrabold text-amber-300 text-center focus:outline-none focus:border-amber-400 transition-colors cursor-pointer">
                                     </select>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="md:col-span-4">
-                            <label class="flex items-center gap-1.5 text-xs font-bold text-slate-300 mb-1.5">
-                                <i data-lucide="arrow-left-right" class="w-3.5 h-3.5 text-emerald-400"></i>
-                                <span>نوع العقد</span>
-                            </label>
-                            <div class="grid grid-cols-2 gap-2 h-11">
-                                <button type="button" id="btnCall" onclick="selectTradeType('CALL')"
-                                    class="flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-xs sm:text-sm transition-all cursor-pointer border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-md shadow-emerald-500/10">
-                                    <i data-lucide="trending-up" class="w-4 h-4"></i>
-                                    <span>CALL</span>
-                                </button>
-                                <button type="button" id="btnPut" onclick="selectTradeType('PUT')"
-                                    class="flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-xs sm:text-sm transition-all cursor-pointer border-slate-700/80 bg-obsidian-950 text-slate-400 hover:text-slate-200">
-                                    <i data-lucide="trending-down" class="w-4 h-4"></i>
-                                    <span>PUT</span>
-                                </button>
-                            </div>
-                            <input type="hidden" id="tradeTypeInput" value="CALL">
                         </div>
                     </div>
 
+                    <!-- الصف الثاني: العقود، الشراء، البيع، العمولة، الملاحظة، والتسجيل -->
                     <div class="grid grid-cols-2 sm:grid-cols-12 gap-3 items-end pt-1">
                         <div class="col-span-2 sm:col-span-2">
                             <label class="block text-xs font-bold text-cyan-300 mb-1.5">عدد العقود</label>
-                            <div class="flex items-center h-11 bg-obsidian-950 border border-cyan-500/40 rounded-xl overflow-hidden">
+                            <div class="flex items-center h-12 sm:h-11 bg-obsidian-950 border border-cyan-500/40 rounded-xl overflow-hidden">
                                 <button type="button" onclick="adjustContracts('contractsInput', -1)"
-                                    class="w-9 h-full flex items-center justify-center text-slate-300 hover:bg-slate-800 hover:text-white font-black text-base cursor-pointer select-none">−</button>
+                                    class="w-11 sm:w-9 h-full flex items-center justify-center text-slate-300 hover:bg-slate-800 active:bg-slate-700 hover:text-white font-black text-lg cursor-pointer select-none">−</button>
                                 <input type="number" id="contractsInput" inputmode="numeric" step="1" min="1" value="1" required oninput="updateLivePreview()"
-                                    class="w-full h-full bg-transparent text-center text-sm font-black text-cyan-300 num-font focus:outline-none" dir="ltr">
+                                    class="w-full h-full bg-transparent text-center text-base sm:text-sm font-black text-cyan-300 num-font focus:outline-none" dir="ltr">
                                 <button type="button" onclick="adjustContracts('contractsInput', 1)"
-                                    class="w-9 h-full flex items-center justify-center text-slate-300 hover:bg-slate-800 hover:text-white font-black text-base cursor-pointer select-none">+</button>
+                                    class="w-11 sm:w-9 h-full flex items-center justify-center text-slate-300 hover:bg-slate-800 active:bg-slate-700 hover:text-white font-black text-lg cursor-pointer select-none">+</button>
                             </div>
                         </div>
 
                         <div class="col-span-1 sm:col-span-2">
                             <label class="block text-xs font-bold text-slate-300 mb-1.5">سعر الشراء ($)</label>
                             <input type="number" id="buyPriceInput" inputmode="decimal" step="any" min="0" required placeholder="0.00" oninput="updateLivePreview()"
-                                class="w-full h-11 px-3 bg-obsidian-950 border border-slate-700/90 rounded-xl text-sm font-extrabold text-white num-font placeholder-slate-600 focus:outline-none focus:border-emerald-400" dir="ltr">
+                                class="w-full h-12 sm:h-11 px-3 bg-obsidian-950 border border-slate-700/90 rounded-xl text-sm font-extrabold text-white num-font placeholder-slate-600 focus:outline-none focus:border-emerald-400" dir="ltr">
                         </div>
 
                         <div class="col-span-1 sm:col-span-2">
                             <label class="block text-xs font-bold text-slate-300 mb-1.5">سعر البيع ($)</label>
                             <input type="number" id="sellPriceInput" inputmode="decimal" step="any" min="0" required placeholder="0.00" oninput="updateLivePreview()"
-                                class="w-full h-11 px-3 bg-obsidian-950 border border-slate-700/90 rounded-xl text-sm font-extrabold text-white num-font placeholder-slate-600 focus:outline-none focus:border-emerald-400" dir="ltr">
+                                class="w-full h-12 sm:h-11 px-3 bg-obsidian-950 border border-slate-700/90 rounded-xl text-sm font-extrabold text-white num-font placeholder-slate-600 focus:outline-none focus:border-emerald-400" dir="ltr">
                         </div>
 
                         <div class="col-span-1 sm:col-span-1">
                             <label class="block text-xs font-bold text-slate-300 mb-1.5">العمولة</label>
                             <input type="text" id="commissionInput" value="4.85" readonly
-                                class="w-full h-11 px-1.5 bg-obsidian-900/90 border border-amber-500/30 rounded-xl text-xs font-extrabold text-amber-300 num-font text-center cursor-not-allowed select-none" dir="ltr" title="4.85$ لكل عقد">
+                                class="w-full h-12 sm:h-11 px-1.5 bg-obsidian-900/90 border border-amber-500/30 rounded-xl text-xs font-extrabold text-amber-300 num-font text-center cursor-not-allowed select-none" dir="ltr" title="4.85$ لكل عقد">
                         </div>
 
                         <div class="col-span-1 sm:col-span-2">
                             <label class="block text-xs font-bold text-slate-300 mb-1.5">ملاحظة الصفقة</label>
                             <input type="text" id="tradeNoteInput" placeholder="ملاحظتك..."
-                                class="w-full h-11 px-3 bg-obsidian-950 border border-slate-700/90 rounded-xl text-xs sm:text-sm font-bold text-purple-200 placeholder-slate-500 focus:outline-none focus:border-purple-400">
+                                class="w-full h-12 sm:h-11 px-3 bg-obsidian-950 border border-slate-700/90 rounded-xl text-xs sm:text-sm font-bold text-purple-200 placeholder-slate-500 focus:outline-none focus:border-purple-400">
                         </div>
 
-                        <div class="col-span-2 sm:col-span-3 flex items-stretch gap-2 h-11">
+                        <div class="col-span-2 sm:col-span-3 flex items-stretch gap-2 h-12 sm:h-11 mt-1 sm:mt-0">
                             <div id="livePreviewBox" class="flex-1 px-3 py-1 rounded-xl bg-obsidian-950 border border-slate-800 flex flex-col justify-center min-w-[95px]">
                                 <div class="flex items-center justify-between text-[10px] text-slate-400">
                                     <span>الصافي</span>
@@ -359,7 +464,7 @@
                                 <span id="livePreviewAmount" class="text-sm font-black text-slate-300 num-font truncate" dir="ltr">$0.00</span>
                             </div>
                             <button type="submit"
-                                class="px-5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 active:scale-95 text-obsidian-950 font-black text-xs sm:text-sm rounded-xl shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0">
+                                class="px-6 sm:px-5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 active:scale-95 text-obsidian-950 font-black text-sm rounded-xl shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0">
                                 <i data-lucide="plus" class="w-4 h-4 stroke-[3]"></i>
                                 <span>تسجيل</span>
                             </button>
@@ -368,9 +473,9 @@
                 </form>
             </section>
 
-            <!-- 2. سجل الصفقات وتقويم الشهور والأيام -->
+            <!-- سجل الصفقات والتقويم -->
             <section class="cyber-panel rounded-2xl overflow-hidden">
-                <div class="bg-obsidian-950/90 border-b border-slate-800 px-3 sm:px-5 py-4 space-y-3">
+                <div class="bg-obsidian-950/90 border-b border-slate-800 px-3 sm:px-5 py-3.5 sm:py-4 space-y-3">
                     <div class="flex items-center justify-between gap-2">
                         <span class="text-xs font-extrabold text-slate-200 flex items-center gap-1.5">
                             <i data-lucide="calendar-days" class="w-4 h-4 text-amber-400"></i>
@@ -384,7 +489,7 @@
                     <div id="daysTabsWrapper" class="pt-2.5 border-t border-slate-800/80"></div>
                 </div>
 
-                <div class="p-4 sm:p-5 border-b border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div class="p-3.5 sm:p-5 border-b border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <div class="flex items-center gap-2.5">
                         <div class="p-2 rounded-xl bg-cyan-500/15 border border-cyan-500/25 text-cyan-400 shrink-0">
                             <i data-lucide="list-ordered" class="w-5 h-5"></i>
@@ -394,13 +499,13 @@
                                 <h3 class="text-sm sm:text-lg font-black text-white" id="tableMonthTitle">سجل الصفقات</h3>
                                 <span id="monthNetSummaryBadge" class="text-xs font-black px-2.5 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 num-font" dir="ltr">+$0.00</span>
                             </div>
-                            <p class="text-[11px] text-slate-400 mt-0.5">شامل عدد العقود وتفاصيل الدخول والخروج وإمكانية التعديل وصافي الربح بعد خصم العمولة ($4.85 لكل عقد)</p>
+                            <p class="text-[11px] text-slate-400 mt-0.5">صافي الربح بعد خصم العمولة ($4.85 لكل عقد)</p>
                         </div>
                     </div>
 
-                    <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                         <select id="symbolFilterSelect" onchange="setSymbolFilter(this.value)"
-                            class="px-3 py-2 bg-obsidian-950 border border-slate-800 rounded-xl text-xs font-bold text-cyan-300 focus:outline-none cursor-pointer">
+                            class="h-10 sm:h-auto px-3 py-2 bg-obsidian-950 border border-slate-800 rounded-xl text-xs font-bold text-cyan-300 focus:outline-none cursor-pointer">
                             <option value="ALL">كل الشركات (الكل)</option>
                             <option value="SPX">SPX فقط</option>
                             <option value="SPY">SPY فقط</option>
@@ -419,9 +524,9 @@
                     </div>
                 </div>
 
-                <!-- بطاقات الجوال -->
+                <!-- عرض الجوال المحسن -->
                 <div id="mobileTradesContainer" class="md:hidden divide-y divide-slate-800/70"></div>
-                <div id="mobileSummaryFooter" class="md:hidden bg-obsidian-950 border-t-2 border-amber-500/30 p-4 space-y-2 text-xs">
+                <div id="mobileSummaryFooter" class="md:hidden bg-obsidian-950 border-t-2 border-amber-500/30 p-3.5 space-y-2 text-xs">
                     <div class="flex items-center justify-between">
                         <span class="text-amber-400 font-extrabold" id="mobileFootLabel">مجموع الفترة:</span>
                         <span id="mobileFootCount" class="bg-amber-500/15 text-amber-300 px-2.5 py-0.5 rounded-lg font-bold">0 صفقات</span>
@@ -483,14 +588,12 @@
         </main>
 
         <!-- ===================================================================== -->
-        <!-- الصفحة الثانية: المحفظة والأداء (رأس المال، التقويم، الملخص، الرسوم)  -->
+        <!-- الصفحة الثانية: المحفظة والأداء                                       -->
         <!-- ===================================================================== -->
-        <main id="page-portfolio" class="hidden max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-5 space-y-6">
-
-            <!-- 1. لوحة المؤشرات التنفيذية ورأس المال -->
+        <main id="page-portfolio" class="hidden max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-5 space-y-5 sm:space-y-6">
             <section class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-                <div class="cyber-panel rounded-2xl p-4 relative overflow-hidden">
-                    <div class="flex items-center justify-between mb-2">
+                <div class="cyber-panel rounded-2xl p-3.5 sm:p-4 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-1.5 sm:mb-2">
                         <span class="text-[11px] font-bold text-slate-400">رأس المال الأساسي</span>
                         <i data-lucide="wallet" class="w-4 h-4 text-cyan-400"></i>
                     </div>
@@ -503,55 +606,54 @@
                     <div class="text-[10px] text-slate-500 mt-1.5 font-semibold">قابل للتعديل الفوري</div>
                 </div>
 
-                <div class="cyber-panel-gold rounded-2xl p-4 relative overflow-hidden">
-                    <div class="flex items-center justify-between mb-2">
+                <div class="cyber-panel-gold rounded-2xl p-3.5 sm:p-4 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-1.5 sm:mb-2">
                         <span class="text-[11px] font-extrabold text-amber-300">الرصيد الإجمالي</span>
                         <i data-lucide="landmark" class="w-4 h-4 text-amber-400"></i>
                     </div>
-                    <div id="kpiCurrentBalance" class="text-lg sm:text-2xl font-black text-white num-font tracking-tight mt-1 truncate" dir="ltr">$25,000.00</div>
+                    <div id="kpiCurrentBalance" class="text-base sm:text-2xl font-black text-white num-font tracking-tight mt-1 truncate" dir="ltr">$25,000.00</div>
                     <div class="flex items-center justify-between mt-2 text-[10px]">
-                        <span class="text-slate-400">النمو الكلي:</span>
+                        <span class="text-slate-400">النمو:</span>
                         <span id="kpiRoiBadge" class="font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 num-font" dir="ltr">+0.00%</span>
                     </div>
                 </div>
 
-                <div class="cyber-panel rounded-2xl p-4 relative overflow-hidden">
-                    <div class="flex items-center justify-between mb-2">
+                <div class="cyber-panel rounded-2xl p-3.5 sm:p-4 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-1.5 sm:mb-2">
                         <span class="text-[11px] font-bold text-slate-400">صافي الربح / الخسارة</span>
                         <div id="kpiNetIconBox" class="text-emerald-400"><i data-lucide="trending-up" class="w-4 h-4"></i></div>
                     </div>
-                    <div id="kpiNetProfit" class="text-lg sm:text-2xl font-black text-emerald-400 num-font tracking-tight mt-1 truncate" dir="ltr">+$0.00</div>
+                    <div id="kpiNetProfit" class="text-base sm:text-2xl font-black text-emerald-400 num-font tracking-tight mt-1 truncate" dir="ltr">+$0.00</div>
                     <div class="flex items-center justify-between mt-2 text-[10px] text-slate-400">
                         <span>العمولات:</span>
                         <span id="kpiTotalComm" class="text-amber-400 font-bold num-font" dir="ltr">-$0.00</span>
                     </div>
                 </div>
 
-                <div class="cyber-panel rounded-2xl p-4 relative overflow-hidden">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-[11px] font-bold text-slate-400">دقة الصفقات (Win Rate)</span>
+                <div class="cyber-panel rounded-2xl p-3.5 sm:p-4 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-1.5 sm:mb-2">
+                        <span class="text-[11px] font-bold text-slate-400">دقة الصفقات</span>
                         <i data-lucide="crosshair" class="w-4 h-4 text-purple-400"></i>
                     </div>
-                    <div class="flex items-baseline gap-2 mt-1">
-                        <span id="kpiWinRate" class="text-lg sm:text-2xl font-black text-white num-font">0%</span>
-                        <span id="kpiWinLossCount" class="text-[11px] font-bold text-slate-400 num-font" dir="ltr">(0W / 0L)</span>
+                    <div class="flex items-baseline gap-1.5 mt-1">
+                        <span id="kpiWinRate" class="text-base sm:text-2xl font-black text-white num-font">0%</span>
+                        <span id="kpiWinLossCount" class="text-[10px] sm:text-[11px] font-bold text-slate-400 num-font" dir="ltr">(0W/0L)</span>
                     </div>
                     <div class="w-full bg-obsidian-950 h-1.5 rounded-full mt-2.5 overflow-hidden border border-slate-800">
                         <div id="kpiWinRateBar" class="bg-gradient-to-r from-emerald-500 to-cyan-400 h-full transition-all duration-500" style="width: 0%"></div>
                     </div>
                 </div>
 
-                <div class="col-span-2 lg:col-span-1 cyber-panel rounded-2xl p-4 relative overflow-hidden">
-                    <div class="flex items-center justify-between mb-2">
+                <div class="col-span-2 lg:col-span-1 cyber-panel rounded-2xl p-3.5 sm:p-4 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-1.5 sm:mb-2">
                         <span class="text-[11px] font-bold text-slate-400">أقوى صفقة محققة</span>
                         <i data-lucide="flame" class="w-4 h-4 text-orange-400"></i>
                     </div>
                     <div id="kpiBestTrade" class="text-lg sm:text-xl font-black text-amber-300 num-font mt-1 truncate" dir="ltr">+$0.00</div>
-                    <div id="kpiBestTradeMeta" class="text-[10px] text-slate-400 mt-2 font-semibold truncate">بانتظار تسجيل الصفقات</div>
+                    <div id="kpiBestTradeMeta" class="text-[10px] text-slate-400 mt-1.5 font-semibold truncate">بانتظار تسجيل الصفقات</div>
                 </div>
             </section>
 
-            <!-- 2. شريط هدف المحفظة الذكي + شريط أداء الشركات -->
             <section class="grid grid-cols-1 lg:grid-cols-12 gap-4">
                 <div class="lg:col-span-5 cyber-panel rounded-2xl p-4 flex flex-col justify-between">
                     <div class="flex items-center justify-between gap-2 mb-2">
@@ -579,7 +681,7 @@
                     <div class="flex items-center justify-between mb-2.5">
                         <span class="text-xs font-extrabold text-slate-300 flex items-center gap-1.5">
                             <i data-lucide="bar-chart-3" class="w-4 h-4 text-cyan-400"></i>
-                            <span>أداء المؤشرات والشركات (اضغط للتصفية في السجل)</span>
+                            <span>أداء المؤشرات والشركات (اضغط للتصفية)</span>
                         </span>
                         <button onclick="setSymbolFilter('ALL')" class="text-[11px] font-bold text-cyan-400 hover:text-cyan-300 cursor-pointer">عرض الكل</button>
                     </div>
@@ -587,9 +689,9 @@
                 </div>
             </section>
 
-            <!-- 3. التقويم الزمني للصفقات (في صفحة المحفظة والأداء) -->
+            <!-- التقويم الزمني للصفقات في صفحة المحفظة والأداء -->
             <section class="cyber-panel rounded-2xl overflow-hidden border-cyan-500/20">
-                <div class="bg-obsidian-950/90 px-3 sm:px-5 py-4 space-y-3">
+                <div class="bg-obsidian-950/90 px-3 sm:px-5 py-3.5 sm:py-4 space-y-3">
                     <div class="flex items-center justify-between gap-2">
                         <span class="text-xs font-extrabold text-slate-200 flex items-center gap-1.5">
                             <i data-lucide="calendar-days" class="w-4 h-4 text-amber-400"></i>
@@ -604,8 +706,8 @@
                 </div>
             </section>
 
-            <!-- 4. ملخص الأداء اليومي المنفصل (مع عدد الصفقات الناجحة والخاسرة) -->
-            <section class="cyber-panel rounded-2xl p-4 sm:p-5 border-amber-500/25 space-y-4">
+            <!-- ملخص الأداء اليومي المنفصل (مع عدد الصفقات الناجحة والخاسرة) -->
+            <section class="cyber-panel rounded-2xl p-3.5 sm:p-5 border-amber-500/25 space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
                     <div class="flex items-center gap-2.5">
                         <div class="p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 shrink-0">
@@ -619,7 +721,7 @@
                                     عرض ملخص كل الأيام
                                 </button>
                             </div>
-                            <p class="text-[11px] text-slate-400 mt-0.5">بطاقة مستقلة لكل يوم تعرض المكسب بالدولار والريال، وعدد الصفقات الناجحة والخاسرة ونوعها</p>
+                            <p class="text-[11px] text-slate-400 mt-0.5">بطاقة مستقلة لكل يوم تعرض المكسب بالدولار والريال، وعدد الصفقات الناجحة والخاسرة</p>
                         </div>
                     </div>
 
@@ -640,7 +742,7 @@
                 </div>
             </section>
 
-            <!-- 5. قسم التحليلات والرسوم البيانية المتقدمة -->
+            <!-- التحليلات والرسوم البيانية -->
             <section class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
                 <div class="lg:col-span-8 cyber-panel rounded-2xl p-4 sm:p-5 flex flex-col justify-between">
                     <div class="flex items-center justify-between gap-2 mb-3">
@@ -682,7 +784,7 @@
                 </div>
             </section>
 
-            <!-- 6. ملخص الأداء المتقدم وإدارة المخاطر -->
+            <!-- ملخص الأداء المتقدم وإدارة المخاطر -->
             <section class="cyber-panel-gold rounded-2xl p-4 sm:p-5 space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-800/80">
                     <div class="flex items-center gap-2.5">
@@ -691,10 +793,10 @@
                         </div>
                         <div>
                             <h3 class="text-sm sm:text-base font-black text-white">ملخص الأداء المتقدم وإدارة المخاطر</h3>
-                            <p class="text-[11px] text-slate-400">مؤشرات جودة التداول والانضباط المالي المحسوبة تلقائياً من جميع صفقاتك</p>
+                            <p class="text-[11px] text-slate-400">مؤشرات جودة التداول والانضباط المالي المحسوبة تلقائياً</p>
                         </div>
                     </div>
-                    <span id="riskTotalContractsBadge" class="text-xs font-extrabold px-3 py-1 rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 num-font">إجمالي العقود المتداولة: 0</span>
+                    <span id="riskTotalContractsBadge" class="text-xs font-extrabold px-3 py-1 rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 num-font">إجمالي العقود: 0</span>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
@@ -791,11 +893,9 @@
         </main>
 
         <!-- ===================================================================== -->
-        <!-- الصفحة الثالثة: مركز الأخبار والاختصارات والشروحات (صور + روابط PDF)   -->
+        <!-- الصفحة الثالثة: مركز الأخبار والاختصارات والشروحات                   -->
         <!-- ===================================================================== -->
-        <main id="page-resources" class="hidden max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-5 space-y-6">
-
-            <!-- ترويسة الصفحة -->
+        <main id="page-resources" class="hidden max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-5 space-y-5 sm:space-y-6">
             <section class="cyber-panel-gold rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="flex items-center gap-3.5">
                     <div class="p-3 rounded-2xl bg-amber-500/15 border border-amber-400/30 text-amber-400 shrink-0">
@@ -803,24 +903,23 @@
                     </div>
                     <div>
                         <h2 class="text-base sm:text-xl font-black text-white">مركز الأخبار والشروحات والملفات</h2>
-                        <p class="text-xs text-slate-400 mt-0.5">اختصارات مواقع الأخبار + مكتبة الصور وروابط ملفات PDF التعليمية (Google Drive وغيرها)</p>
+                        <p class="text-xs text-slate-400 mt-0.5">اختصارات مواقع الأخبار + مكتبة الصور وروابط ملفات PDF التعليمية</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-2 flex-wrap">
+                <div class="grid grid-cols-2 sm:flex items-center gap-2">
                     <button onclick="openAddShortcutModal()"
-                        class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-400/35 text-xs font-black transition-all cursor-pointer">
+                        class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-400/35 text-xs font-black transition-all cursor-pointer">
                         <i data-lucide="link" class="w-4 h-4"></i>
                         <span>+ إضافة موقع</span>
                     </button>
                     <button onclick="openAddGuideModal()"
-                        class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-obsidian-950 text-xs font-black shadow-lg shadow-amber-500/20 transition-all cursor-pointer">
+                        class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-obsidian-950 text-xs font-black shadow-lg shadow-amber-500/20 transition-all cursor-pointer">
                         <i data-lucide="file-plus-2" class="w-4 h-4"></i>
-                        <span>+ إضافة شرح / PDF / صورة</span>
+                        <span>+ شرح / PDF</span>
                     </button>
                 </div>
             </section>
 
-            <!-- القسم 1: اختصارات مواقع الأخبار والأسواق -->
             <section class="cyber-panel rounded-2xl p-4 sm:p-5 space-y-4">
                 <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-800/80">
                     <div class="flex items-center gap-2">
@@ -829,18 +928,16 @@
                     </div>
                     <span id="shortcutsCountBadge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-obsidian-900 border border-slate-800 text-slate-400 num-font">0 مواقع</span>
                 </div>
-
                 <div id="newsShortcutsGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"></div>
             </section>
 
-            <!-- القسم 2: معرض الصور وملفات PDF والشروحات التعليمية -->
             <section class="cyber-panel rounded-2xl p-4 sm:p-5 space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-800/80">
                     <div class="flex items-center gap-2">
                         <span class="p-1.5 rounded-lg bg-amber-500/15 text-amber-400"><i data-lucide="book-open" class="w-4 h-4"></i></span>
                         <div>
                             <h3 class="text-sm sm:text-base font-black text-white">الشروحات والصور وملفات PDF</h3>
-                            <p class="text-[11px] text-slate-400">اضغط على أي صورة لتكبيرها أو على ملف PDF لقراءته مباشرة داخل الموقع</p>
+                            <p class="text-[11px] text-slate-400">اضغط على أي صورة لتكبيرها أو على ملف PDF لقراءته مباشرة</p>
                         </div>
                     </div>
                     <span id="guidesCountBadge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-obsidian-900 border border-slate-800 text-slate-400 num-font">0 عناصر</span>
@@ -853,18 +950,15 @@
                         <i data-lucide="folder-open" class="w-6 h-6"></i>
                     </div>
                     <h4 class="text-sm font-bold text-slate-300">لا توجد شروحات أو ملفات مضافة بعد</h4>
-                    <p class="text-xs text-slate-500 mt-1">اضغط على زر "+ إضافة شرح / PDF / صورة" بالأعلى لإضافة روابط PDF أو شارتاتك التعليمية.</p>
+                    <p class="text-xs text-slate-500 mt-1">اضغط على زر "+ شرح / PDF" بالأعلى لإضافة روابط PDF أو شارتاتك التعليمية.</p>
                 </div>
             </section>
         </main>
-
     </div>
 
     <!-- ===================================================================== -->
     <!-- النوافذ المنبثقة (Modals)                                             -->
     <!-- ===================================================================== -->
-
-    <!-- نافذة إضافة موقع أخبار جديد -->
     <div id="addShortcutModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
         <div class="cyber-panel rounded-2xl max-w-md w-full p-5 sm:p-6 border border-cyan-500/35 shadow-2xl">
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
@@ -898,7 +992,6 @@
         </div>
     </div>
 
-    <!-- نافذة إضافة شرح / رابط PDF / صورة -->
     <div id="addGuideModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
         <div class="cyber-panel-gold rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl my-auto">
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
@@ -969,7 +1062,6 @@
         </div>
     </div>
 
-    <!-- نافذة قارئ ملفات PDF المدمج داخل الموقع -->
     <div id="pdfViewerModal" onclick="closePdfViewer()" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90 backdrop-blur-md p-2 sm:p-5">
         <div class="cyber-panel rounded-2xl max-w-5xl w-full h-[90vh] flex flex-col overflow-hidden border border-rose-500/40 shadow-2xl" onclick="event.stopPropagation()">
             <div class="flex items-center justify-between px-4 py-3 bg-obsidian-950 border-b border-slate-800 gap-2">
@@ -994,7 +1086,6 @@
         </div>
     </div>
 
-    <!-- نافذة تكبير الصورة (Lightbox) -->
     <div id="imageLightboxModal" onclick="closeLightbox()" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90 backdrop-blur-md p-4">
         <div class="max-w-4xl w-full space-y-3" onclick="event.stopPropagation()">
             <div class="flex items-center justify-between text-white">
@@ -1008,7 +1099,6 @@
         </div>
     </div>
 
-    <!-- نافذة تعديل الصفقة المتكاملة -->
     <div id="editTradeModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
         <div class="cyber-panel rounded-2xl max-w-lg w-full p-5 sm:p-6 border border-cyan-500/35 shadow-2xl my-auto">
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
@@ -1024,6 +1114,23 @@
 
             <form id="editTradeForm" onsubmit="saveEditedTrade(event)" class="space-y-4">
                 <input type="hidden" id="editTradeId">
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">نوع العقد (CALL / PUT)</label>
+                    <div class="grid grid-cols-2 gap-2.5 h-11">
+                        <button type="button" id="editBtnCall" onclick="selectEditTradeType('CALL')"
+                            class="flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-xs sm:text-sm transition-all cursor-pointer border-emerald-500 bg-emerald-500/15 text-emerald-300">
+                            <i data-lucide="trending-up" class="w-4 h-4"></i>
+                            <span>CALL (كول)</span>
+                        </button>
+                        <button type="button" id="editBtnPut" onclick="selectEditTradeType('PUT')"
+                            class="flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-xs sm:text-sm transition-all cursor-pointer border-slate-700 bg-obsidian-950 text-slate-400">
+                            <i data-lucide="trending-down" class="w-4 h-4"></i>
+                            <span>PUT (بوت)</span>
+                        </button>
+                    </div>
+                    <input type="hidden" id="editTypeInput" value="CALL">
+                </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
                     <div class="sm:col-span-5">
@@ -1053,23 +1160,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1.5">نوع العقد (CALL / PUT)</label>
-                    <div class="grid grid-cols-2 gap-2.5 h-11">
-                        <button type="button" id="editBtnCall" onclick="selectEditTradeType('CALL')"
-                            class="flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-xs sm:text-sm transition-all cursor-pointer border-emerald-500 bg-emerald-500/15 text-emerald-300">
-                            <i data-lucide="trending-up" class="w-4 h-4"></i>
-                            <span>CALL (كول)</span>
-                        </button>
-                        <button type="button" id="editBtnPut" onclick="selectEditTradeType('PUT')"
-                            class="flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-xs sm:text-sm transition-all cursor-pointer border-slate-700 bg-obsidian-950 text-slate-400">
-                            <i data-lucide="trending-down" class="w-4 h-4"></i>
-                            <span>PUT (بوت)</span>
-                        </button>
-                    </div>
-                    <input type="hidden" id="editTypeInput" value="CALL">
                 </div>
 
                 <div class="grid grid-cols-3 gap-2.5">
@@ -1123,7 +1213,6 @@
         </div>
     </div>
 
-    <!-- نافذة الأهداف المالية -->
     <div id="goalsModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
         <div class="cyber-panel-gold rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl">
             <div class="flex items-center justify-between mb-4">
@@ -1146,7 +1235,6 @@
         </div>
     </div>
 
-    <!-- نافذة تأكيد التصفير -->
     <div id="confirmModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
         <div class="cyber-panel rounded-2xl max-w-sm w-full p-5 border border-rose-500/30 shadow-2xl">
             <div class="flex items-center gap-3 mb-3">
@@ -1161,15 +1249,14 @@
         </div>
     </div>
 
-    <!-- إشعار منبثق -->
-    <div id="toast" class="fixed bottom-4 left-4 right-4 sm:right-auto sm:left-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+    <div id="toast" class="fixed bottom-20 lg:bottom-5 left-4 right-4 sm:right-auto sm:left-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
         <div class="flex items-center justify-center sm:justify-start gap-2.5 bg-obsidian-850 border border-amber-500/40 text-white px-4 py-3 rounded-xl shadow-2xl text-xs sm:text-sm font-bold">
             <i data-lucide="sparkles" class="w-4 h-4 text-amber-400 shrink-0"></i>
             <span id="toastMessage">تم الحفظ</span>
         </div>
     </div>
 
-    <!-- ربط Firebase Firestore للمزامنة اللحظية بين جميع الأجهزة -->
+    <!-- ربط Firebase Firestore -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -1188,27 +1275,30 @@
         const db = getFirestore(app);
         const portfolioDocRef = doc(db, "portfolios", "m7md_main_account");
 
-        function updateSyncStatusUI(status, text) {
+        function updateSyncStatusUI(status, text, shortText) {
             const badge = document.getElementById('cloudSyncBadge');
             const dot = document.getElementById('cloudSyncDot');
             const label = document.getElementById('cloudSyncText');
+            const shortLabel = document.getElementById('cloudSyncShortText');
             if (!badge || !dot || !label) return;
             label.textContent = text;
+            if (shortLabel) shortLabel.textContent = shortText || text;
+
             if (status === 'connected') {
-                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold bg-emerald-500/15 text-emerald-300 border border-emerald-400/30';
+                badge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold bg-emerald-500/15 text-emerald-300 border border-emerald-400/30 shrink-0';
                 dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400';
             } else if (status === 'syncing') {
-                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold bg-amber-500/15 text-amber-300 border border-amber-400/30';
+                badge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold bg-amber-500/15 text-amber-300 border border-amber-400/30 shrink-0';
                 dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping';
             } else {
-                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold bg-rose-500/15 text-rose-300 border border-rose-400/30';
+                badge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold bg-rose-500/15 text-rose-300 border border-rose-400/30 shrink-0';
                 dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-400';
             }
         }
 
         window.saveToCloud = async function(stateObj) {
             try {
-                updateSyncStatusUI('syncing', 'جاري المزامنة...');
+                updateSyncStatusUI('syncing', 'جاري المزامنة...', 'مزامنة...');
                 await setDoc(portfolioDocRef, {
                     initialCapital: Number(stateObj.initialCapital) || 0,
                     targetGoal: Number(stateObj.targetGoal) || 50000,
@@ -1216,12 +1306,13 @@
                     trades: Array.isArray(stateObj.trades) ? stateObj.trades : [],
                     shortcuts: Array.isArray(stateObj.shortcuts) ? stateObj.shortcuts : [],
                     guides: Array.isArray(stateObj.guides) ? stateObj.guides : [],
+                    authCredentials: stateObj.authCredentials || window.getStoredCredentials(),
                     updatedAt: Date.now()
                 });
-                updateSyncStatusUI('connected', 'متصل ومحدّث تلقائياً');
+                updateSyncStatusUI('connected', 'متصل ومحدّث تلقائياً', 'متصل');
             } catch (err) {
                 console.error("Firebase Sync Error:", err);
-                updateSyncStatusUI('error', 'وضع غير متصل (محلي)');
+                updateSyncStatusUI('error', 'وضع غير متصل (محلي)', 'محلي');
             }
         };
 
@@ -1231,7 +1322,7 @@
                 if (typeof window.applyRemoteState === 'function') {
                     window.applyRemoteState(cloudData);
                 }
-                updateSyncStatusUI('connected', 'متصل ومحدّث تلقائياً');
+                updateSyncStatusUI('connected', 'متصل ومحدّث تلقائياً', 'متصل');
             } else {
                 if (window.appState) {
                     window.saveToCloud(window.appState);
@@ -1239,23 +1330,167 @@
             }
         }, (error) => {
             console.error("Snapshot listener error:", error);
-            updateSyncStatusUI('error', 'تعذر الاتصال بالسحابة');
+            updateSyncStatusUI('error', 'تعذر الاتصال بالسحابة', 'غير متصل');
         });
     </script>
 
     <script>
-        // --- إعدادات الحماية وتسجيل الدخول وتذكر المتصفح لمدة أسبوع ---
-        const AUTH_USERNAME = 'kaboom';
-        const AUTH_PASSWORD = 'm7md@123456';
+        // =========================================================================
+        // 1. إعدادات الدخول والاستعادة عبر الإيميل
+        // =========================================================================
+        const RECOVERY_EMAIL = 'YOUR_EMAIL@gmail.com';
+        const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY';
+        const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID';
+        const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
+
+        const DEFAULT_USERNAME = 'kaboom';
+        const DEFAULT_PASSWORD = 'm7md@123456';
+        const CREDENTIALS_STORAGE_KEY = 'm7md_alhawiti_credentials_v1';
         const AUTH_SESSION_KEY = 'm7md_alhawiti_auth_session_v1';
         const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
+        let generatedOtpCode = null;
+        let otpExpiresAt = 0;
+
+        if (window.emailjs && EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY') {
+            emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+        }
+
+        window.getStoredCredentials = function() {
+            try {
+                const saved = localStorage.getItem(CREDENTIALS_STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && parsed.username && parsed.password) {
+                        return parsed;
+                    }
+                }
+            } catch (e) {}
+            return { username: DEFAULT_USERNAME, password: DEFAULT_PASSWORD };
+        };
+
+        function saveCredentialsLocally(username, password) {
+            const creds = { username, password };
+            localStorage.setItem(CREDENTIALS_STORAGE_KEY, JSON.stringify(creds));
+            if (window.appState) {
+                window.appState.authCredentials = creds;
+            }
+        }
+
+        window.openRecoveryView = function() {
+            document.getElementById('loginFormView').classList.add('hidden');
+            document.getElementById('recoveryView').classList.remove('hidden');
+            document.getElementById('recoveryStepEmail').classList.remove('hidden');
+            document.getElementById('recoveryStepReset').classList.add('hidden');
+            document.getElementById('recoveryErrorBox').classList.add('hidden');
+            document.getElementById('otpErrorBox').classList.add('hidden');
+            document.getElementById('authSubtitleText').textContent = 'استعادة اسم المستخدم وكلمة المرور عبر البريد';
+            lucide.createIcons();
+        };
+
+        window.backToLoginView = function() {
+            document.getElementById('recoveryView').classList.add('hidden');
+            document.getElementById('loginFormView').classList.remove('hidden');
+            document.getElementById('authSubtitleText').textContent = 'بوابة الدخول الخاصة • ادخل بياناتك للمتابعة';
+            lucide.createIcons();
+        };
+
+        window.sendRecoveryCodeToEmail = async function(event) {
+            event.preventDefault();
+            const enteredEmail = document.getElementById('recoveryEmailInput').value.trim().toLowerCase();
+            const errorBox = document.getElementById('recoveryErrorBox');
+            const errorText = document.getElementById('recoveryErrorText');
+            const sendBtn = document.getElementById('sendCodeBtn');
+
+            if (RECOVERY_EMAIL === 'YOUR_EMAIL@gmail.com') {
+                errorText.textContent = 'يرجى وضع بريدك الإلكتروني وبيانات EmailJS في الكود أولاً.';
+                errorBox.classList.remove('hidden');
+                return;
+            }
+
+            if (enteredEmail !== RECOVERY_EMAIL.toLowerCase()) {
+                errorText.textContent = 'البريد الإلكتروني غير مطابق للبريد المسجل في النظام!';
+                errorBox.classList.remove('hidden');
+                return;
+            }
+
+            errorBox.classList.add('hidden');
+            generatedOtpCode = Math.floor(100000 + Math.random() * 900000).toString();
+            otpExpiresAt = Date.now() + (10 * 60 * 1000);
+
+            const currentCreds = window.getStoredCredentials();
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<span>جاري إرسال الكود...</span>';
+
+            try {
+                await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+                    to_email: RECOVERY_EMAIL,
+                    passcode: generatedOtpCode,
+                    username: currentCreds.username
+                });
+
+                document.getElementById('recoveryStepEmail').classList.add('hidden');
+                document.getElementById('recoveryStepReset').classList.remove('hidden');
+                document.getElementById('recoveredUsernameHint').textContent = `User: ${currentCreds.username}`;
+                document.getElementById('newUsernameInput').value = currentCreds.username;
+                document.getElementById('newPasswordInput').value = '';
+                document.getElementById('otpCodeInput').value = '';
+                showToast('تم إرسال رمز التحقق إلى بريدك الإلكتروني ✉️');
+            } catch (err) {
+                console.error('EmailJS Error:', err);
+                errorText.textContent = 'فشل إرسال الرسالة، تأكد من إعدادات EmailJS واتصالك بالإنترنت.';
+                errorBox.classList.remove('hidden');
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i><span>إرسال كود التحقق إلى الإيميل</span>';
+                lucide.createIcons();
+            }
+        };
+
+        window.verifyCodeAndResetPassword = function(event) {
+            event.preventDefault();
+            const enteredCode = document.getElementById('otpCodeInput').value.trim();
+            const newUser = document.getElementById('newUsernameInput').value.trim();
+            const newPass = document.getElementById('newPasswordInput').value;
+            const otpErrorBox = document.getElementById('otpErrorBox');
+            const otpErrorText = document.getElementById('otpErrorText');
+
+            if (!generatedOtpCode || Date.now() > otpExpiresAt) {
+                otpErrorText.textContent = 'انتهت صلاحية الرمز، اطلب رمزاً جديداً.';
+                otpErrorBox.classList.remove('hidden');
+                return;
+            }
+
+            if (enteredCode !== generatedOtpCode) {
+                otpErrorText.textContent = 'رمز التحقق غير صحيح! راجع بريدك الإلكتروني.';
+                otpErrorBox.classList.remove('hidden');
+                return;
+            }
+
+            otpErrorBox.classList.add('hidden');
+            generatedOtpCode = null;
+
+            saveCredentialsLocally(newUser, newPass);
+            saveState();
+
+            localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({
+                user: newUser,
+                expiresAt: Date.now() + ONE_WEEK_MS
+            }));
+
+            backToLoginView();
+            unlockAppScreen();
+            renderAll();
+            showToast('تم تحديث اسم المستخدم وكلمة المرور ومزامنتها بنجاح 🔐');
+        };
+
         function checkAuthSession() {
+            const creds = window.getStoredCredentials();
             try {
                 const rawSession = localStorage.getItem(AUTH_SESSION_KEY);
                 if (rawSession) {
                     const session = JSON.parse(rawSession);
-                    if (session && session.user === AUTH_USERNAME && session.expiresAt > Date.now()) {
+                    if (session && session.user === creds.username && session.expiresAt > Date.now()) {
                         unlockAppScreen();
                         return true;
                     } else {
@@ -1263,7 +1498,7 @@
                     }
                 }
                 const tempSession = sessionStorage.getItem(AUTH_SESSION_KEY);
-                if (tempSession === AUTH_USERNAME) {
+                if (tempSession === creds.username) {
                     unlockAppScreen();
                     return true;
                 }
@@ -1300,21 +1535,22 @@
 
         window.handleLoginSubmit = function(event) {
             event.preventDefault();
+            const creds = window.getStoredCredentials();
             const userVal = document.getElementById('loginUsernameInput').value.trim();
             const passVal = document.getElementById('loginPasswordInput').value;
             const rememberWeek = document.getElementById('rememberWeekCheckbox').checked;
             const errorBox = document.getElementById('loginErrorBox');
             const cardBox = document.getElementById('loginCardBox');
 
-            if (userVal === AUTH_USERNAME && passVal === AUTH_PASSWORD) {
+            if (userVal === creds.username && passVal === creds.password) {
                 errorBox.classList.add('hidden');
                 if (rememberWeek) {
                     localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({
-                        user: AUTH_USERNAME,
+                        user: creds.username,
                         expiresAt: Date.now() + ONE_WEEK_MS
                     }));
                 } else {
-                    sessionStorage.setItem(AUTH_SESSION_KEY, AUTH_USERNAME);
+                    sessionStorage.setItem(AUTH_SESSION_KEY, creds.username);
                 }
                 document.getElementById('loginPasswordInput').value = '';
                 unlockAppScreen();
@@ -1337,7 +1573,9 @@
             lockAppScreen();
         };
 
-        // --- بقية متغيرات ودوال التطبيق ---
+        // =========================================================================
+        // 2. المتغيرات الأساسية والتنقل
+        // =========================================================================
         const COMMISSION_PER_CONTRACT = 4.85;
         const LOCAL_STORAGE_KEY = 'm7md_alhawiti_options_v1';
         const LEGACY_KEYS = ['apex_options_portfolio_v3', 'options_portfolio_tracker_v2'];
@@ -1394,7 +1632,8 @@
             sarRate: 3.75,
             trades: [],
             shortcuts: [...DEFAULT_SHORTCUTS],
-            guides: [...DEFAULT_GUIDES]
+            guides: [...DEFAULT_GUIDES],
+            authCredentials: window.getStoredCredentials()
         };
 
         let activePage = 'trades';
@@ -1407,7 +1646,6 @@
         let distributionChartInstance = null;
         let pendingUploadedImageBase64 = '';
 
-        // --- التنقل بين الصفحات الثلاث ---
         window.switchPage = function(pageName) {
             activePage = pageName;
             const tradesPage = document.getElementById('page-trades');
@@ -1418,21 +1656,32 @@
             const btnPortfolio = document.getElementById('nav-btn-portfolio');
             const btnResources = document.getElementById('nav-btn-resources');
 
+            const mBtnTrades = document.getElementById('mobile-nav-trades');
+            const mBtnPortfolio = document.getElementById('mobile-nav-portfolio');
+            const mBtnResources = document.getElementById('mobile-nav-resources');
+
             tradesPage.classList.add('hidden');
             portfolioPage.classList.add('hidden');
             resourcesPage.classList.add('hidden');
 
-            const inactiveClass = 'flex-1 lg:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer text-slate-300 hover:text-white hover:bg-obsidian-800';
-            btnTrades.className = inactiveClass;
-            btnPortfolio.className = inactiveClass;
-            btnResources.className = inactiveClass;
+            const desktopInactive = 'flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-sm font-extrabold transition-all cursor-pointer text-slate-300 hover:text-white hover:bg-obsidian-800';
+            if (btnTrades) btnTrades.className = desktopInactive;
+            if (btnPortfolio) btnPortfolio.className = desktopInactive;
+            if (btnResources) btnResources.className = desktopInactive;
+
+            const mobileInactive = 'flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer text-slate-400 hover:text-white border border-transparent';
+            if (mBtnTrades) mBtnTrades.className = mobileInactive;
+            if (mBtnPortfolio) mBtnPortfolio.className = mobileInactive;
+            if (mBtnResources) mBtnResources.className = mobileInactive;
 
             if (pageName === 'trades') {
                 tradesPage.classList.remove('hidden');
-                btnTrades.className = 'flex-1 lg:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer bg-gradient-to-r from-amber-500 to-orange-500 text-obsidian-950 shadow-lg shadow-amber-500/20';
+                if (btnTrades) btnTrades.className = 'flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-sm font-black transition-all cursor-pointer bg-gradient-to-r from-amber-500 to-orange-500 text-obsidian-950 shadow-lg shadow-amber-500/20';
+                if (mBtnTrades) mBtnTrades.className = 'flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-black transition-all cursor-pointer bg-amber-500/15 text-amber-300 border border-amber-400/30';
             } else if (pageName === 'portfolio') {
                 portfolioPage.classList.remove('hidden');
-                btnPortfolio.className = 'flex-1 lg:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer bg-gradient-to-r from-emerald-500 to-teal-600 text-obsidian-950 shadow-lg shadow-emerald-500/20';
+                if (btnPortfolio) btnPortfolio.className = 'flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-sm font-black transition-all cursor-pointer bg-gradient-to-r from-emerald-500 to-teal-600 text-obsidian-950 shadow-lg shadow-emerald-500/20';
+                if (mBtnPortfolio) mBtnPortfolio.className = 'flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-black transition-all cursor-pointer bg-emerald-500/15 text-emerald-300 border border-emerald-400/30';
                 renderTickerScoreboard();
                 renderMonthTabs();
                 renderDayTabs();
@@ -1442,7 +1691,8 @@
                 renderRiskSummary();
             } else if (pageName === 'resources') {
                 resourcesPage.classList.remove('hidden');
-                btnResources.className = 'flex-1 lg:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20';
+                if (btnResources) btnResources.className = 'flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-sm font-black transition-all cursor-pointer bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20';
+                if (mBtnResources) mBtnResources.className = 'flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-black transition-all cursor-pointer bg-cyan-500/15 text-cyan-300 border border-cyan-400/30';
                 renderResourcesPage();
             }
 
@@ -1508,7 +1758,8 @@
                             sarRate: parsed.sarRate || 3.75,
                             trades: parsed.trades,
                             shortcuts: Array.isArray(parsed.shortcuts) && parsed.shortcuts.length ? parsed.shortcuts : [...DEFAULT_SHORTCUTS],
-                            guides: Array.isArray(parsed.guides) ? parsed.guides : [...DEFAULT_GUIDES]
+                            guides: Array.isArray(parsed.guides) ? parsed.guides : [...DEFAULT_GUIDES],
+                            authCredentials: parsed.authCredentials || window.getStoredCredentials()
                         };
                     }
                 }
@@ -1525,13 +1776,18 @@
         }
 
         window.applyRemoteState = function(cloudData) {
+            if (cloudData.authCredentials && cloudData.authCredentials.username && cloudData.authCredentials.password) {
+                saveCredentialsLocally(cloudData.authCredentials.username, cloudData.authCredentials.password);
+            }
+
             window.appState = {
                 initialCapital: typeof cloudData.initialCapital === 'number' ? cloudData.initialCapital : 25000,
                 targetGoal: typeof cloudData.targetGoal === 'number' ? cloudData.targetGoal : 50000,
                 sarRate: typeof cloudData.sarRate === 'number' ? cloudData.sarRate : 3.75,
                 trades: Array.isArray(cloudData.trades) ? cloudData.trades : [],
                 shortcuts: Array.isArray(cloudData.shortcuts) && cloudData.shortcuts.length ? cloudData.shortcuts : (window.appState.shortcuts || [...DEFAULT_SHORTCUTS]),
-                guides: Array.isArray(cloudData.guides) ? cloudData.guides : (window.appState.guides || [...DEFAULT_GUIDES])
+                guides: Array.isArray(cloudData.guides) ? cloudData.guides : (window.appState.guides || [...DEFAULT_GUIDES]),
+                authCredentials: window.getStoredCredentials()
             };
             try {
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(window.appState));
@@ -1561,6 +1817,9 @@
             return rawUrl;
         }
 
+        // =========================================================================
+        // 3. دوال الأخبار والشروحات وملفات PDF
+        // =========================================================================
         window.openAddShortcutModal = function() {
             document.getElementById('shortcutNameInput').value = '';
             document.getElementById('shortcutUrlInput').value = '';
@@ -1728,15 +1987,15 @@
 
             shortcutsGrid.innerHTML = shortcuts.map(s => `
                 <a href="${escapeHTML(s.url)}" target="_blank" rel="noopener noreferrer"
-                    class="group relative p-4 rounded-2xl bg-obsidian-950/90 border border-slate-800 hover:border-cyan-400/60 hover:bg-obsidian-900 transition-all flex flex-col justify-between space-y-2.5">
+                    class="group relative p-3.5 sm:p-4 rounded-2xl bg-obsidian-950/90 border border-slate-800 hover:border-cyan-400/60 hover:bg-obsidian-900 transition-all flex flex-col justify-between space-y-2">
                     <div class="flex items-start justify-between gap-2">
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 min-w-0">
                             <span class="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                                 <i data-lucide="external-link" class="w-4 h-4"></i>
                             </span>
-                            <h4 class="text-xs sm:text-sm font-black text-white group-hover:text-cyan-300 transition-colors line-clamp-1">${escapeHTML(s.name)}</h4>
+                            <h4 class="text-xs sm:text-sm font-black text-white group-hover:text-cyan-300 transition-colors truncate">${escapeHTML(s.name)}</h4>
                         </div>
-                        <button onclick="deleteShortcut(${s.id}, event)" class="p-1 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-500/15 transition-colors cursor-pointer" title="حذف الموقع">
+                        <button onclick="deleteShortcut(${s.id}, event)" class="p-1 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-500/15 transition-colors cursor-pointer shrink-0" title="حذف الموقع">
                             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                         </button>
                     </div>
@@ -1831,6 +2090,9 @@
             lucide.createIcons();
         }
 
+        // =========================================================================
+        // 4. إدارة الصفقات والمؤشرات والرسوم البيانية
+        // =========================================================================
         let capitalDebounceTimer = null;
         window.handleCapitalChange = function(val) {
             const parsed = parseFloat(val);
@@ -1884,11 +2146,11 @@
             const btnCall = document.getElementById('btnCall');
             const btnPut = document.getElementById('btnPut');
             if (type === 'CALL') {
-                btnCall.className = 'flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-xs sm:text-sm transition-all cursor-pointer border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-md shadow-emerald-500/10';
-                btnPut.className = 'flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-xs sm:text-sm transition-all cursor-pointer border-slate-700/80 bg-obsidian-950 text-slate-400 hover:text-slate-200';
+                btnCall.className = 'flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-sm transition-all cursor-pointer active:scale-95 border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-md shadow-emerald-500/10';
+                btnPut.className = 'flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-sm transition-all cursor-pointer active:scale-95 border-slate-700/80 bg-obsidian-950 text-slate-400 hover:text-slate-200';
             } else {
-                btnPut.className = 'flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-xs sm:text-sm transition-all cursor-pointer border-rose-500 bg-rose-500/15 text-rose-300 shadow-md shadow-rose-500/10';
-                btnCall.className = 'flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-xs sm:text-sm transition-all cursor-pointer border-slate-700/80 bg-obsidian-950 text-slate-400 hover:text-slate-200';
+                btnPut.className = 'flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-sm transition-all cursor-pointer active:scale-95 border-rose-500 bg-rose-500/15 text-rose-300 shadow-md shadow-rose-500/10';
+                btnCall.className = 'flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-sm transition-all cursor-pointer active:scale-95 border-slate-700/80 bg-obsidian-950 text-slate-400 hover:text-slate-200';
             }
             updateLivePreview();
         };
@@ -1902,8 +2164,8 @@
             const feeBadge = document.getElementById('headerFeeBadge');
             if (feeBadge) {
                 feeBadge.textContent = contracts > 1
-                    ? `Fee: $${totalComm.toFixed(2)} (${contracts} × $4.85)`
-                    : `Fee: $4.85 / عقد`;
+                    ? `Fee: $${totalComm.toFixed(2)} (${contracts}x)`
+                    : `Fee: $4.85`;
             }
 
             const buy = parseFloat(document.getElementById('buyPriceInput').value) || 0;
@@ -1923,18 +2185,18 @@
             if (buy === 0 && sell === 0) {
                 box.className = 'flex-1 px-3 py-1 rounded-xl bg-obsidian-950 border border-slate-800 flex flex-col justify-center min-w-[95px]';
                 amountEl.className = 'text-sm font-black text-slate-300 num-font truncate';
-                statusEl.className = 'text-xs font-extrabold px-3 py-1 rounded-lg bg-slate-800/90 text-slate-400';
+                statusEl.className = 'text-[11px] sm:text-xs font-extrabold px-2.5 py-1 rounded-lg bg-slate-800/90 text-slate-400';
                 statusEl.textContent = 'بانتظار السعر';
             } else if (net > 0) {
                 box.className = 'flex-1 px-3 py-1 rounded-xl bg-emerald-950/50 border border-emerald-500/40 flex flex-col justify-center min-w-[95px]';
                 amountEl.className = 'text-sm font-black text-emerald-400 num-font truncate';
-                statusEl.className = 'text-xs font-extrabold px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-300';
-                statusEl.textContent = `صفقة رابحة (${contracts}x) 🔥`;
+                statusEl.className = 'text-[11px] sm:text-xs font-extrabold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300';
+                statusEl.textContent = `رابحة (${contracts}x) 🔥`;
             } else if (net < 0) {
                 box.className = 'flex-1 px-3 py-1 rounded-xl bg-rose-950/50 border border-rose-500/40 flex flex-col justify-center min-w-[95px]';
                 amountEl.className = 'text-sm font-black text-rose-400 num-font truncate';
-                statusEl.className = 'text-xs font-extrabold px-3 py-1 rounded-lg bg-rose-500/20 text-rose-300';
-                statusEl.textContent = `صفقة خاسرة (${contracts}x)`;
+                statusEl.className = 'text-[11px] sm:text-xs font-extrabold px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300';
+                statusEl.textContent = `خاسرة (${contracts}x)`;
             } else {
                 box.className = 'flex-1 px-3 py-1 rounded-xl bg-slate-900 border border-slate-700 flex flex-col justify-center min-w-[95px]';
                 amountEl.className = 'text-sm font-black text-slate-200 num-font truncate';
@@ -2285,7 +2547,7 @@
 
             let html = `
                 <button onclick="selectMonthTab('ALL')"
-                    class="flex flex-col items-start justify-between min-w-[96px] px-3 py-2 rounded-xl text-xs transition-all cursor-pointer shrink-0 border ${
+                    class="flex flex-col items-start justify-between min-w-[92px] px-3 py-2 rounded-xl text-xs transition-all cursor-pointer shrink-0 border ${
                         allActive
                             ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-obsidian-950 border-amber-300 shadow-lg shadow-amber-500/20'
                             : 'bg-obsidian-900 text-slate-300 border-slate-800 hover:border-slate-700'
@@ -2304,7 +2566,7 @@
                 const isActive = selectedMonth === m.key;
                 return `
                     <button onclick="selectMonthTab('${m.key}')"
-                        class="flex flex-col items-start justify-between min-w-[96px] px-3 py-2 rounded-xl text-xs transition-all cursor-pointer shrink-0 border ${
+                        class="flex flex-col items-start justify-between min-w-[92px] px-3 py-2 rounded-xl text-xs transition-all cursor-pointer shrink-0 border ${
                             isActive
                                 ? 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white border-cyan-300 shadow-lg shadow-cyan-500/20'
                                 : 'bg-obsidian-900 text-slate-300 border-slate-800 hover:border-slate-700'
@@ -2366,7 +2628,7 @@
 
                 dayCards.push(`
                     <button onclick="selectDayTab('${dStr}')"
-                        class="flex flex-col items-center justify-center min-w-[66px] px-2 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 border ${cardStyle}">
+                        class="flex flex-col items-center justify-center min-w-[64px] px-2 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 border ${cardStyle}">
                         <span class="text-[10px] font-bold ${isActive ? 'text-obsidian-900' : 'text-slate-400'}">${getArabicWeekdayName(selectedMonth, d)}</span>
                         <span class="text-sm font-black leading-tight my-0.5 num-font">${d}</span>
                         <span class="text-[10px] font-extrabold num-font ${isActive ? 'text-obsidian-950' : (hasTrades ? (dayNet >= 0 ? 'text-emerald-400' : 'text-rose-400') : 'text-slate-600')}" dir="ltr">
@@ -2379,7 +2641,7 @@
             const innerContent = `
                 <div class="flex items-stretch gap-2 overflow-x-auto no-scrollbar pb-0.5">
                     <button onclick="selectDayTab('ALL')"
-                        class="flex flex-col items-center justify-center min-w-[76px] px-2.5 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 border ${
+                        class="flex flex-col items-center justify-center min-w-[74px] px-2.5 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 border ${
                             allDaysActive ? 'bg-amber-500/20 text-amber-300 border-amber-400/60' : 'bg-obsidian-900 text-slate-400 border-slate-800'
                         }">
                         <span class="text-[10px] font-bold">الشهر كامل</span>
@@ -2422,16 +2684,16 @@
             roiEl.textContent = `${roi >= 0 ? '+' : ''}${roi.toFixed(2)}%`;
 
             if (totalNet >= 0) {
-                netEl.className = 'text-lg sm:text-2xl font-black text-emerald-400 num-font tracking-tight mt-1 truncate';
+                netEl.className = 'text-base sm:text-2xl font-black text-emerald-400 num-font tracking-tight mt-1 truncate';
                 roiEl.className = 'font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 num-font';
             } else {
-                netEl.className = 'text-lg sm:text-2xl font-black text-rose-400 num-font tracking-tight mt-1 truncate';
+                netEl.className = 'text-base sm:text-2xl font-black text-rose-400 num-font tracking-tight mt-1 truncate';
                 roiEl.className = 'font-extrabold px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-300 num-font';
             }
 
             document.getElementById('kpiTotalComm').textContent = `-${formatUSD(totalComm)}`;
             document.getElementById('kpiWinRate').textContent = `${winRate}%`;
-            document.getElementById('kpiWinLossCount').textContent = `(${winCount}W / ${lossCount}L)`;
+            document.getElementById('kpiWinLossCount').textContent = `(${winCount}W/${lossCount}L)`;
             document.getElementById('kpiWinRateBar').style.width = `${winRate}%`;
 
             if (bestTrade && bestNet > 0) {
@@ -2566,24 +2828,25 @@
                 const rawNote = getTradeNote(trade);
 
                 return `
-                    <div class="p-4 space-y-2.5">
-                        <div class="flex items-center justify-between">
+                    <div class="p-3.5 space-y-2.5">
+                        <div class="flex items-center justify-between gap-2">
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <span class="text-xs font-bold text-slate-500 num-font">#${filtered.length - index}</span>
+                                <span class="text-[11px] font-bold text-slate-500 num-font">#${filtered.length - index}</span>
+                                <span class="px-2 py-0.5 rounded-lg text-xs font-black ${isCall ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/25' : 'bg-rose-500/15 text-rose-300 border border-rose-500/25'}">${trade.type}</span>
                                 <span class="px-2 py-0.5 rounded-lg text-xs font-black border num-font ${symInfo.badge}" dir="ltr">${symInfo.label}</span>
-                                <span class="px-2 py-0.5 rounded-lg text-xs font-black ${isCall ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300'}">${trade.type}</span>
                                 <span class="px-2 py-0.5 rounded-lg text-xs font-black bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 num-font" dir="ltr">${contracts}x</span>
-                                <span class="text-[11px] text-slate-400 num-font" dir="ltr">${trade.date || ''}</span>
                             </div>
-                            <div class="flex items-center gap-1.5">
+                            <div class="flex items-center gap-1.5 shrink-0">
                                 <span class="text-sm font-black num-font ml-1 ${isWin ? 'text-emerald-400' : (isLoss ? 'text-rose-400' : 'text-slate-300')}" dir="ltr">${formatUSD(net, true)}</span>
-                                <button onclick="openEditModal(${trade.id})" class="p-1.5 rounded-lg text-cyan-300 hover:bg-cyan-500/15 bg-obsidian-900 border border-slate-800 cursor-pointer" title="تعديل"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
-                                <button onclick="deleteTrade(${trade.id})" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 bg-obsidian-900 border border-slate-800 cursor-pointer" title="حذف"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                                <button onclick="openEditModal(${trade.id})" class="p-2 rounded-xl text-cyan-300 active:bg-cyan-500/20 bg-obsidian-900 border border-slate-800 cursor-pointer" title="تعديل"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                                <button onclick="deleteTrade(${trade.id})" class="p-2 rounded-xl text-slate-400 active:text-rose-400 bg-obsidian-900 border border-slate-800 cursor-pointer" title="حذف"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                             </div>
                         </div>
-                        ${rawNote ? `<div class="px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-200 font-semibold flex items-center gap-1.5"><i data-lucide="sticky-note" class="w-3.5 h-3.5 text-purple-400 shrink-0"></i><span>${escapeHTML(rawNote)}</span></div>` : ''}
-                        <div class="grid grid-cols-4 gap-1.5 text-center bg-obsidian-950/80 p-2 rounded-xl border border-slate-800/80 text-xs num-font">
-                            <div><div class="text-[10px] text-slate-400 font-sans">العقود</div><div class="font-black text-cyan-300 mt-0.5" dir="ltr">${contracts}x</div></div>
+                        <div class="flex items-center justify-between text-[11px] text-slate-400 num-font" dir="ltr">
+                            <span>${trade.date || ''}</span>
+                            ${rawNote ? `<span class="text-purple-300 font-sans font-semibold truncate max-w-[190px]" dir="rtl">📝 ${escapeHTML(rawNote)}</span>` : ''}
+                        </div>
+                        <div class="grid grid-cols-3 gap-1.5 text-center bg-obsidian-950/80 p-2 rounded-xl border border-slate-800/80 text-xs num-font">
                             <div><div class="text-[10px] text-slate-400 font-sans">الشراء</div><div class="font-bold text-slate-200 mt-0.5" dir="ltr">${formatUSD(trade.buyPrice)}</div></div>
                             <div><div class="text-[10px] text-slate-400 font-sans">البيع</div><div class="font-bold text-slate-200 mt-0.5" dir="ltr">${formatUSD(trade.sellPrice)}</div></div>
                             <div><div class="text-[10px] text-slate-400 font-sans">العمولة</div><div class="font-bold text-amber-400 mt-0.5" dir="ltr">-${formatUSD(comm)}</div></div>
@@ -2750,7 +3013,6 @@
                             </div>
                         </div>
 
-                        <!-- عدد الصفقات الناجحة والخاسرة -->
                         <div class="grid grid-cols-2 gap-2 text-[11px] font-extrabold">
                             <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-300">
                                 <span class="flex items-center gap-1">
@@ -2924,7 +3186,7 @@
                 dailyMap[dayKey].net += net;
             });
 
-            document.getElementById('riskTotalContractsBadge').textContent = `إجمالي العقود المتداولة: ${totalContractsAll}`;
+            document.getElementById('riskTotalContractsBadge').textContent = `إجمالي العقود: ${totalContractsAll}`;
 
             const pfEl = document.getElementById('riskProfitFactor');
             const pfBadge = document.getElementById('riskPfStatusBadge');
@@ -3019,7 +3281,8 @@
                             sarRate: parsed.sarRate || 3.75,
                             trades: parsed.trades,
                             shortcuts: Array.isArray(parsed.shortcuts) ? parsed.shortcuts : window.appState.shortcuts,
-                            guides: Array.isArray(parsed.guides) ? parsed.guides : window.appState.guides
+                            guides: Array.isArray(parsed.guides) ? parsed.guides : window.appState.guides,
+                            authCredentials: window.getStoredCredentials()
                         };
                         saveState();
                         document.getElementById('initialCapitalInput').value = window.appState.initialCapital;
