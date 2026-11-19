@@ -12,8 +12,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- مكتبة EmailJS لإرسال كود الاستعادة إلى البريد الإلكتروني -->
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -73,6 +71,12 @@
             border: 1px solid rgba(251, 191, 36, 0.28);
             box-shadow: 0 10px 40px -12px rgba(245, 158, 11, 0.15);
         }
+        /* تصميم القائمة المنبثقة للإدارة بخلفية صلبة وواضحة متناسقة مع الموقع */
+        .admin-solid-dropdown {
+            background: linear-gradient(165deg, #131C31 0%, #080C16 100%);
+            border: 1px solid rgba(251, 191, 36, 0.35);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(4, 6, 11, 0.9);
+        }
         .grid-bg {
             background-image: 
                 linear-gradient(to right, rgba(30, 41, 59, 0.22) 1px, transparent 1px),
@@ -101,7 +105,7 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- شاشة تسجيل الدخول + استعادة الحساب عبر البريد الإلكتروني             -->
+    <!-- شاشة تسجيل الدخول                                                     -->
     <!-- ===================================================================== -->
     <div id="loginGateScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-obsidian-950/95 backdrop-blur-2xl p-4 grid-bg overflow-y-auto">
         <div id="loginCardBox" class="cyber-panel-gold rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6 my-auto">
@@ -113,7 +117,7 @@
                 <p id="authSubtitleText" class="text-xs text-slate-400 font-semibold">بوابة الدخول الخاصة • ادخل بياناتك للمتابعة</p>
             </div>
 
-            <!-- 1. نموذج تسجيل الدخول الأساسي -->
+            <!-- نموذج تسجيل الدخول الأساسي -->
             <form id="loginFormView" onsubmit="handleLoginSubmit(event)" class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-300 mb-1.5">اسم المستخدم</label>
@@ -129,9 +133,6 @@
                 <div>
                     <div class="flex items-center justify-between mb-1.5">
                         <label class="block text-xs font-bold text-slate-300">كلمة المرور</label>
-                        <button type="button" onclick="openRecoveryView()" class="text-[11px] font-extrabold text-amber-400 hover:text-amber-300 underline underline-offset-4 cursor-pointer">
-                            نسيت الاسم أو كلمة المرور؟
-                        </button>
                     </div>
                     <div class="relative">
                         <span class="absolute inset-y-0 right-3 flex items-center text-slate-500 pointer-events-none">
@@ -163,77 +164,6 @@
                     <span>تسجيل الدخول</span>
                 </button>
             </form>
-
-            <!-- 2. شاشة استعادة الحساب وإرسال كود للإيميل -->
-            <div id="recoveryView" class="hidden space-y-4">
-                <form id="recoveryStepEmail" onsubmit="sendRecoveryCodeToEmail(event)" class="space-y-4">
-                    <div class="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/25 text-xs text-cyan-200 leading-relaxed">
-                        أدخل بريدك الإلكتروني المسجل لإرسال رمز تحقق مكوّن من 6 أرقام لاستعادة اسم المستخدم وتعيين كلمة سر جديدة.
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-300 mb-1.5">البريد الإلكتروني المسجل</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 right-3 flex items-center text-slate-500 pointer-events-none">
-                                <i data-lucide="mail" class="w-4 h-4"></i>
-                            </span>
-                            <input type="email" id="recoveryEmailInput" required placeholder="name@example.com" dir="ltr"
-                                class="w-full h-12 pr-10 pl-3.5 bg-obsidian-950 border border-slate-700 focus:border-cyan-400 rounded-xl text-sm font-bold text-white num-font outline-none transition-colors">
-                        </div>
-                    </div>
-
-                    <div id="recoveryErrorBox" class="hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-xs font-bold text-rose-300 flex items-center gap-2">
-                        <i data-lucide="alert-circle" class="w-4 h-4 text-rose-400 shrink-0"></i>
-                        <span id="recoveryErrorText">البريد الإلكتروني غير مطابق للبريد المسجل!</span>
-                    </div>
-
-                    <button type="submit" id="sendCodeBtn"
-                        class="w-full h-12 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-xs sm:text-sm rounded-xl shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer">
-                        <i data-lucide="send" class="w-4 h-4"></i>
-                        <span>إرسال كود التحقق إلى الإيميل</span>
-                    </button>
-                </form>
-
-                <form id="recoveryStepReset" onsubmit="verifyCodeAndResetPassword(event)" class="hidden space-y-4">
-                    <div class="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-xs text-emerald-200 flex items-center justify-between">
-                        <span>تم إرسال الكود إلى بريدك بنجاح</span>
-                        <span class="font-black text-amber-300 num-font" dir="ltr" id="recoveredUsernameHint">User: kaboom</span>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-amber-300 mb-1.5">رمز التحقق (6 أرقام)</label>
-                        <input type="text" id="otpCodeInput" required maxlength="6" inputmode="numeric" placeholder="000000" dir="ltr"
-                            class="w-full h-12 px-3.5 bg-obsidian-950 border border-amber-500/40 focus:border-amber-400 rounded-xl text-lg font-black text-center tracking-[0.4em] text-amber-300 num-font outline-none">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-300 mb-1.5">اسم المستخدم (يمكنك تعديله أو تركه)</label>
-                        <input type="text" id="newUsernameInput" required dir="ltr"
-                            class="w-full h-12 px-3.5 bg-obsidian-950 border border-slate-700 focus:border-cyan-400 rounded-xl text-sm font-bold text-white num-font outline-none">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-300 mb-1.5">كلمة المرور الجديدة</label>
-                        <input type="text" id="newPasswordInput" required minlength="4" placeholder="اكتب كلمة السر الجديدة" dir="ltr"
-                            class="w-full h-12 px-3.5 bg-obsidian-950 border border-slate-700 focus:border-emerald-400 rounded-xl text-sm font-bold text-emerald-300 num-font outline-none">
-                    </div>
-
-                    <div id="otpErrorBox" class="hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-xs font-bold text-rose-300 flex items-center gap-2">
-                        <i data-lucide="alert-circle" class="w-4 h-4 text-rose-400 shrink-0"></i>
-                        <span id="otpErrorText">رمز التحقق غير صحيح!</span>
-                    </div>
-
-                    <button type="submit"
-                        class="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-obsidian-950 font-black text-xs sm:text-sm rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer">
-                        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
-                        <span>حفظ البيانات الجديدة والدخول</span>
-                    </button>
-                </form>
-
-                <button type="button" onclick="backToLoginView()" class="w-full py-2 text-xs font-bold text-slate-400 hover:text-white flex items-center justify-center gap-1.5 cursor-pointer">
-                    <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-                    <span>العودة لتسجيل الدخول</span>
-                </button>
-            </div>
         </div>
     </div>
 
@@ -288,7 +218,7 @@
                         </button>
                     </nav>
 
-                    <!-- أدوات التحكم السريعة + قائمة الإدارة المنبثقة -->
+                    <!-- أدوات التحكم السريعة + قائمة الإدارة المنبثقة الواضحة -->
                     <div class="flex items-center gap-2 shrink-0">
                         <button onclick="openGoalsModal()" class="inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-2 text-xs font-extrabold rounded-xl bg-amber-500/15 text-amber-300 border border-amber-400/30 hover:bg-amber-500/25 transition-all cursor-pointer" title="الأهداف">
                             <i data-lucide="target" class="w-4 h-4 text-amber-400"></i>
@@ -307,16 +237,16 @@
                             </button>
 
                             <div id="adminDropdownMenu"
-                                class="hidden absolute left-0 mt-2 w-60 rounded-2xl bg-obsidian-900/98 backdrop-blur-2xl border border-slate-700/90 shadow-2xl shadow-black/80 py-2 z-50 overflow-hidden">
-                                <div class="px-3.5 py-1.5 border-b border-slate-800/80 flex items-center justify-between">
-                                    <span class="text-[11px] font-extrabold text-slate-400">إدارة البيانات والحساب</span>
-                                    <span class="text-[10px] font-mono text-amber-400/80">ADMIN</span>
+                                class="hidden absolute left-0 mt-2 w-64 rounded-2xl admin-solid-dropdown py-2 z-50 overflow-hidden">
+                                <div class="px-3.5 py-2 border-b border-slate-800 flex items-center justify-between bg-obsidian-950/60">
+                                    <span class="text-[11px] font-extrabold text-slate-300">إدارة البيانات والحساب</span>
+                                    <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">ADMIN</span>
                                 </div>
 
                                 <div class="p-1.5 space-y-1">
                                     <button type="button" onclick="closeAdminMenu(); exportBackupJSON();"
-                                        class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-200 hover:bg-cyan-500/15 hover:text-cyan-300 transition-colors cursor-pointer text-right">
-                                        <span class="p-1.5 rounded-lg bg-cyan-500/15 text-cyan-400">
+                                        class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-100 hover:bg-cyan-500/20 hover:text-cyan-300 transition-colors cursor-pointer text-right">
+                                        <span class="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
                                             <i data-lucide="download" class="w-3.5 h-3.5"></i>
                                         </span>
                                         <div class="flex-1">
@@ -326,8 +256,8 @@
                                     </button>
 
                                     <button type="button" onclick="closeAdminMenu(); document.getElementById('restoreFileInput').click();"
-                                        class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-200 hover:bg-purple-500/15 hover:text-purple-300 transition-colors cursor-pointer text-right">
-                                        <span class="p-1.5 rounded-lg bg-purple-500/15 text-purple-400">
+                                        class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-100 hover:bg-purple-500/20 hover:text-purple-300 transition-colors cursor-pointer text-right">
+                                        <span class="p-1.5 rounded-lg bg-purple-500/20 text-purple-400 border border-purple-500/30">
                                             <i data-lucide="upload" class="w-3.5 h-3.5"></i>
                                         </span>
                                         <div class="flex-1">
@@ -337,8 +267,8 @@
                                     </button>
 
                                     <button type="button" onclick="closeAdminMenu(); exportToCSV();"
-                                        class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-200 hover:bg-emerald-500/15 hover:text-emerald-300 transition-colors cursor-pointer text-right">
-                                        <span class="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-400">
+                                        class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-100 hover:bg-emerald-500/20 hover:text-emerald-300 transition-colors cursor-pointer text-right">
+                                        <span class="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                                             <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
                                         </span>
                                         <div class="flex-1">
@@ -347,9 +277,20 @@
                                         </div>
                                     </button>
 
+                                    <button type="button" onclick="closeAdminMenu(); openCredentialsModal();"
+                                        class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-100 hover:bg-blue-500/20 hover:text-blue-300 transition-colors cursor-pointer text-right">
+                                        <span class="p-1.5 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                                            <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
+                                        </span>
+                                        <div class="flex-1">
+                                            <div class="font-extrabold">بيانات الدخول</div>
+                                            <div class="text-[10px] text-slate-400">تغيير اليوزر والرقم السري</div>
+                                        </div>
+                                    </button>
+
                                     <button type="button" onclick="closeAdminMenu(); confirmClearAll();"
-                                        class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-amber-200 hover:bg-amber-500/15 hover:text-amber-300 transition-colors cursor-pointer text-right">
-                                        <span class="p-1.5 rounded-lg bg-amber-500/15 text-amber-400">
+                                        class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-amber-200 hover:bg-amber-500/20 hover:text-amber-300 transition-colors cursor-pointer text-right">
+                                        <span class="p-1.5 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30">
                                             <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
                                         </span>
                                         <div class="flex-1">
@@ -359,10 +300,10 @@
                                     </button>
                                 </div>
 
-                                <div class="border-t border-slate-800/90 p-1.5 mt-0.5">
+                                <div class="border-t border-slate-800 p-1.5 mt-0.5 bg-obsidian-950/40">
                                     <button type="button" onclick="closeAdminMenu(); handleLogout();"
                                         class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-black text-rose-300 hover:bg-rose-500/20 hover:text-rose-200 transition-colors cursor-pointer text-right">
-                                        <span class="p-1.5 rounded-lg bg-rose-500/15 text-rose-400">
+                                        <span class="p-1.5 rounded-lg bg-rose-500/20 text-rose-400 border border-rose-500/30">
                                             <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
                                         </span>
                                         <span>تسجيل الخروج</span>
@@ -1297,6 +1238,58 @@
         </div>
     </div>
 
+    <div id="credentialsModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="cyber-panel-gold rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl my-auto">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <span class="p-2 rounded-xl bg-blue-500/15 text-blue-400 border border-blue-500/30"><i data-lucide="shield-alert" class="w-4 h-4"></i></span>
+                    <div>
+                        <h3 class="text-base font-black text-white">تغيير بيانات الدخول</h3>
+                        <p class="text-[11px] text-slate-400">تُحفظ وتُزامن تلقائياً على جميع أجهزتك</p>
+                    </div>
+                </div>
+                <button onclick="closeCredentialsModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-white cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form onsubmit="saveNewCredentials(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">كلمة المرور الحالية (للتحقق)</label>
+                    <input type="password" id="credCurrentPassInput" required placeholder="أدخل الرقم السري الحالي" dir="ltr"
+                        class="w-full h-11 px-3.5 bg-obsidian-950 border border-slate-700 rounded-xl text-sm font-bold text-white num-font focus:outline-none focus:border-amber-400">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-cyan-300 mb-1.5">اسم المستخدم الجديد (اليوزر)</label>
+                    <input type="text" id="credNewUsernameInput" required minlength="3" placeholder="اسم المستخدم الجديد" dir="ltr"
+                        class="w-full h-11 px-3.5 bg-obsidian-950 border border-slate-700 rounded-xl text-sm font-bold text-cyan-300 num-font focus:outline-none focus:border-cyan-400">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-emerald-300 mb-1.5">كلمة المرور الجديدة</label>
+                    <div class="relative">
+                        <input type="password" id="credNewPassInput" required minlength="4" placeholder="الرقم السري الجديد" dir="ltr"
+                            class="w-full h-11 px-3.5 pl-10 bg-obsidian-950 border border-slate-700 rounded-xl text-sm font-bold text-white num-font focus:outline-none focus:border-emerald-400">
+                        <button type="button" onclick="toggleNewCredPassVisibility()" class="absolute inset-y-0 left-3 flex items-center text-slate-400 hover:text-amber-300 cursor-pointer">
+                            <i id="credNewPassEyeIcon" data-lucide="eye" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">تأكيد كلمة المرور الجديدة</label>
+                    <input type="password" id="credConfirmPassInput" required minlength="4" placeholder="أعد كتابة الرقم السري الجديد" dir="ltr"
+                        class="w-full h-11 px-3.5 bg-obsidian-950 border border-slate-700 rounded-xl text-sm font-bold text-white num-font focus:outline-none focus:border-emerald-400">
+                </div>
+
+                <div id="credErrorBox" class="hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-xs font-bold text-rose-300 flex items-center gap-2">
+                    <i data-lucide="alert-circle" class="w-4 h-4 text-rose-400 shrink-0"></i>
+                    <span id="credErrorText">خطأ في البيانات</span>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeCredentialsModal()" class="px-4 py-2.5 rounded-xl bg-obsidian-800 text-slate-300 text-xs font-bold cursor-pointer">إلغاء</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-obsidian-950 text-xs font-black shadow-lg shadow-amber-500/20 cursor-pointer">حفظ البيانات الجديدة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="confirmModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
         <div class="cyber-panel rounded-2xl max-w-sm w-full p-5 border border-rose-500/30 shadow-2xl">
             <div class="flex items-center gap-3 mb-3">
@@ -1430,25 +1423,13 @@
         });
 
         // =========================================================================
-        // 1. إعدادات الدخول والاستعادة عبر الإيميل
+        // 1. إعدادات تسجيل الدخول
         // =========================================================================
-        const RECOVERY_EMAIL = 'YOUR_EMAIL@gmail.com';
-        const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY';
-        const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID';
-        const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
-
-        const DEFAULT_USERNAME = 'kaboom';
+        const DEFAULT_USERNAME = 'm7md';
         const DEFAULT_PASSWORD = 'm7md@123456';
         const CREDENTIALS_STORAGE_KEY = 'm7md_alhawiti_credentials_v1';
         const AUTH_SESSION_KEY = 'm7md_alhawiti_auth_session_v1';
         const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-
-        let generatedOtpCode = null;
-        let otpExpiresAt = 0;
-
-        if (window.emailjs && EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY') {
-            emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
-        }
 
         window.getStoredCredentials = function() {
             try {
@@ -1475,113 +1456,6 @@
                 window.appState.authCredentials = creds;
             }
         }
-
-        window.openRecoveryView = function() {
-            document.getElementById('loginFormView').classList.add('hidden');
-            document.getElementById('recoveryView').classList.remove('hidden');
-            document.getElementById('recoveryStepEmail').classList.remove('hidden');
-            document.getElementById('recoveryStepReset').classList.add('hidden');
-            document.getElementById('recoveryErrorBox').classList.add('hidden');
-            document.getElementById('otpErrorBox').classList.add('hidden');
-            document.getElementById('authSubtitleText').textContent = 'استعادة اسم المستخدم وكلمة المرور عبر البريد';
-            lucide.createIcons();
-        };
-
-        window.backToLoginView = function() {
-            document.getElementById('recoveryView').classList.add('hidden');
-            document.getElementById('loginFormView').classList.remove('hidden');
-            document.getElementById('authSubtitleText').textContent = 'بوابة الدخول الخاصة • ادخل بياناتك للمتابعة';
-            lucide.createIcons();
-        };
-
-        window.sendRecoveryCodeToEmail = async function(event) {
-            event.preventDefault();
-            const enteredEmail = document.getElementById('recoveryEmailInput').value.trim().toLowerCase();
-            const errorBox = document.getElementById('recoveryErrorBox');
-            const errorText = document.getElementById('recoveryErrorText');
-            const sendBtn = document.getElementById('sendCodeBtn');
-
-            if (RECOVERY_EMAIL === 'YOUR_EMAIL@gmail.com') {
-                errorText.textContent = 'يرجى وضع بريدك الإلكتروني وبيانات EmailJS في الكود أولاً.';
-                errorBox.classList.remove('hidden');
-                return;
-            }
-
-            if (enteredEmail !== RECOVERY_EMAIL.toLowerCase()) {
-                errorText.textContent = 'البريد الإلكتروني غير مطابق للبريد المسجل في النظام!';
-                errorBox.classList.remove('hidden');
-                return;
-            }
-
-            errorBox.classList.add('hidden');
-            generatedOtpCode = Math.floor(100000 + Math.random() * 900000).toString();
-            otpExpiresAt = Date.now() + (10 * 60 * 1000);
-
-            const currentCreds = window.getStoredCredentials();
-            sendBtn.disabled = true;
-            sendBtn.innerHTML = '<span>جاري إرسال الكود...</span>';
-
-            try {
-                await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-                    to_email: RECOVERY_EMAIL,
-                    passcode: generatedOtpCode,
-                    username: currentCreds.username
-                });
-
-                document.getElementById('recoveryStepEmail').classList.add('hidden');
-                document.getElementById('recoveryStepReset').classList.remove('hidden');
-                document.getElementById('recoveredUsernameHint').textContent = `User: ${currentCreds.username}`;
-                document.getElementById('newUsernameInput').value = currentCreds.username;
-                document.getElementById('newPasswordInput').value = '';
-                document.getElementById('otpCodeInput').value = '';
-                showToast('تم إرسال رمز التحقق إلى بريدك الإلكتروني ✉️');
-            } catch (err) {
-                console.error('EmailJS Error:', err);
-                errorText.textContent = 'فشل إرسال الرسالة، تأكد من إعدادات EmailJS واتصالك بالإنترنت.';
-                errorBox.classList.remove('hidden');
-            } finally {
-                sendBtn.disabled = false;
-                sendBtn.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i><span>إرسال كود التحقق إلى الإيميل</span>';
-                lucide.createIcons();
-            }
-        };
-
-        window.verifyCodeAndResetPassword = function(event) {
-            event.preventDefault();
-            const enteredCode = document.getElementById('otpCodeInput').value.trim();
-            const newUser = document.getElementById('newUsernameInput').value.trim();
-            const newPass = document.getElementById('newPasswordInput').value;
-            const otpErrorBox = document.getElementById('otpErrorBox');
-            const otpErrorText = document.getElementById('otpErrorText');
-
-            if (!generatedOtpCode || Date.now() > otpExpiresAt) {
-                otpErrorText.textContent = 'انتهت صلاحية الرمز، اطلب رمزاً جديداً.';
-                otpErrorBox.classList.remove('hidden');
-                return;
-            }
-
-            if (enteredCode !== generatedOtpCode) {
-                otpErrorText.textContent = 'رمز التحقق غير صحيح! راجع بريدك الإلكتروني.';
-                otpErrorBox.classList.remove('hidden');
-                return;
-            }
-
-            otpErrorBox.classList.add('hidden');
-            generatedOtpCode = null;
-
-            saveCredentialsLocally(newUser, newPass);
-            saveState();
-
-            localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({
-                user: newUser,
-                expiresAt: Date.now() + ONE_WEEK_MS
-            }));
-
-            backToLoginView();
-            unlockAppScreen();
-            renderAll();
-            showToast('تم تحديث اسم المستخدم وكلمة المرور ومزامنتها بنجاح 🔐');
-        };
 
         function checkAuthSession() {
             const creds = window.getStoredCredentials();
@@ -1661,6 +1535,88 @@
                 void cardBox.offsetWidth;
                 cardBox.classList.add('animate-shake');
             }
+        };
+
+        window.openCredentialsModal = function() {
+            const creds = window.getStoredCredentials();
+            document.getElementById('credCurrentPassInput').value = '';
+            document.getElementById('credNewUsernameInput').value = creds.username;
+            document.getElementById('credNewPassInput').value = '';
+            document.getElementById('credConfirmPassInput').value = '';
+            document.getElementById('credErrorBox').classList.add('hidden');
+            document.getElementById('credentialsModal').classList.replace('hidden', 'flex');
+            lucide.createIcons();
+        };
+
+        window.closeCredentialsModal = function() {
+            document.getElementById('credentialsModal').classList.replace('flex', 'hidden');
+        };
+
+        window.toggleNewCredPassVisibility = function() {
+            const passInput = document.getElementById('credNewPassInput');
+            const confirmInput = document.getElementById('credConfirmPassInput');
+            const eyeIcon = document.getElementById('credNewPassEyeIcon');
+            if (!passInput || !eyeIcon) return;
+            const nextType = passInput.type === 'password' ? 'text' : 'password';
+            passInput.type = nextType;
+            if (confirmInput) confirmInput.type = nextType;
+            eyeIcon.setAttribute('data-lucide', nextType === 'text' ? 'eye-off' : 'eye');
+            lucide.createIcons();
+        };
+
+        window.saveNewCredentials = function(event) {
+            event.preventDefault();
+            const currentCreds = window.getStoredCredentials();
+            const currentPass = document.getElementById('credCurrentPassInput').value;
+            const newUsername = document.getElementById('credNewUsernameInput').value.trim();
+            const newPass = document.getElementById('credNewPassInput').value;
+            const confirmPass = document.getElementById('credConfirmPassInput').value;
+            const errorBox = document.getElementById('credErrorBox');
+            const errorText = document.getElementById('credErrorText');
+
+            if (currentPass !== currentCreds.password) {
+                errorText.textContent = 'كلمة المرور الحالية غير صحيحة!';
+                errorBox.classList.remove('hidden');
+                return;
+            }
+            if (!newUsername || newUsername.length < 3) {
+                errorText.textContent = 'يجب أن يكون اسم المستخدم 3 أحرف على الأقل.';
+                errorBox.classList.remove('hidden');
+                return;
+            }
+            if (newPass.length < 4) {
+                errorText.textContent = 'يجب أن تكون كلمة المرور 4 خانات على الأقل.';
+                errorBox.classList.remove('hidden');
+                return;
+            }
+            if (newPass !== confirmPass) {
+                errorText.textContent = 'كلمة المرور الجديدة وتأكيدها غير متطابقين!';
+                errorBox.classList.remove('hidden');
+                return;
+            }
+
+            errorBox.classList.add('hidden');
+            saveCredentialsLocally(newUsername, newPass);
+
+            try {
+                const rawSession = localStorage.getItem(AUTH_SESSION_KEY);
+                if (rawSession) {
+                    const session = JSON.parse(rawSession);
+                    if (session && session.expiresAt > Date.now()) {
+                        localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({
+                            user: newUsername,
+                            expiresAt: session.expiresAt
+                        }));
+                    }
+                }
+                if (sessionStorage.getItem(AUTH_SESSION_KEY)) {
+                    sessionStorage.setItem(AUTH_SESSION_KEY, newUsername);
+                }
+            } catch (e) {}
+
+            saveState();
+            closeCredentialsModal();
+            showToast('تم تحديث اسم المستخدم وكلمة المرور ومزامنتهما بنجاح 🔐');
         };
 
         window.handleLogout = function() {
