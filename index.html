@@ -91,7 +91,7 @@
         .animate-shake { animation: shake 0.35s ease-in-out; }
     </style>
 </head>
-<body class="min-h-screen antialiased selection:bg-amber-500/30 selection:text-amber-200 pb-24 lg:pb-12 grid-bg">
+<body class="min-h-screen antialiased selection:bg-amber-500/30 selection:text-amber-200 pb-24 md:pb-12 grid-bg">
 
     <!-- إضاءات نيون محيطية -->
     <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
@@ -263,51 +263,113 @@
                         </div>
                     </div>
 
-                    <!-- قائمة التنقل لسطح المكتب (تختفي في الجوال لأن لها شريط سفلي مريح) -->
-                    <nav class="hidden lg:flex items-center gap-1.5 bg-obsidian-900/95 p-1.5 rounded-2xl border border-slate-800">
+                    <!-- قائمة التنقل الرئيسية بتصميم كبسولة زجاجية متطورة -->
+                    <nav class="hidden md:flex items-center gap-1.5 bg-obsidian-900/90 backdrop-blur-xl p-1.5 rounded-2xl border border-slate-700/70 shadow-inner shadow-black/50">
                         <button onclick="switchPage('trades')" id="nav-btn-trades"
-                            class="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-sm font-black transition-all cursor-pointer bg-gradient-to-r from-amber-500 to-orange-500 text-obsidian-950 shadow-lg shadow-amber-500/20">
-                            <i data-lucide="candlestick-chart" class="w-4 h-4"></i>
+                            class="group relative flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs lg:text-sm font-black transition-all duration-200 cursor-pointer bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 text-obsidian-950 shadow-lg shadow-amber-500/25">
+                            <span class="p-1 rounded-lg bg-black/15">
+                                <i data-lucide="candlestick-chart" class="w-3.5 h-3.5 stroke-[2.5]"></i>
+                            </span>
                             <span>سجل الصفقات</span>
                         </button>
                         <button onclick="switchPage('portfolio')" id="nav-btn-portfolio"
-                            class="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-sm font-extrabold transition-all cursor-pointer text-slate-300 hover:text-white hover:bg-obsidian-800">
-                            <i data-lucide="wallet" class="w-4 h-4 text-emerald-400"></i>
+                            class="group relative flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs lg:text-sm font-extrabold transition-all duration-200 cursor-pointer text-slate-300 hover:text-white hover:bg-obsidian-800/80 border border-transparent">
+                            <span class="p-1 rounded-lg bg-emerald-500/15 text-emerald-400 group-hover:bg-emerald-500/25 transition-colors">
+                                <i data-lucide="wallet" class="w-3.5 h-3.5"></i>
+                            </span>
                             <span>المحفظة والأداء</span>
                         </button>
                         <button onclick="switchPage('resources')" id="nav-btn-resources"
-                            class="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-sm font-extrabold transition-all cursor-pointer text-slate-300 hover:text-white hover:bg-obsidian-800">
-                            <i data-lucide="newspaper" class="w-4 h-4 text-cyan-400"></i>
+                            class="group relative flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs lg:text-sm font-extrabold transition-all duration-200 cursor-pointer text-slate-300 hover:text-white hover:bg-obsidian-800/80 border border-transparent">
+                            <span class="p-1 rounded-lg bg-cyan-500/15 text-cyan-400 group-hover:bg-cyan-500/25 transition-colors">
+                                <i data-lucide="newspaper" class="w-3.5 h-3.5"></i>
+                            </span>
                             <span>الأخبار والشروحات</span>
                         </button>
                     </nav>
 
-                    <!-- أدوات التحكم السريعة -->
-                    <div class="flex items-center gap-1.5 shrink-0">
-                        <button onclick="openGoalsModal()" class="inline-flex items-center justify-center gap-1 p-2 sm:px-3 sm:py-2 text-xs font-extrabold rounded-xl bg-amber-500/15 text-amber-300 border border-amber-400/30 hover:bg-amber-500/25 transition-all cursor-pointer" title="الأهداف">
+                    <!-- أدوات التحكم السريعة + قائمة الإدارة المنبثقة -->
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button onclick="openGoalsModal()" class="inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-2 text-xs font-extrabold rounded-xl bg-amber-500/15 text-amber-300 border border-amber-400/30 hover:bg-amber-500/25 transition-all cursor-pointer" title="الأهداف">
                             <i data-lucide="target" class="w-4 h-4 text-amber-400"></i>
                             <span class="hidden sm:inline">الأهداف</span>
                         </button>
-                        <button onclick="exportBackupJSON()" class="inline-flex items-center justify-center gap-1 p-2 sm:px-3 sm:py-2 text-xs font-bold rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 hover:bg-cyan-500/20 transition-all cursor-pointer" title="نسخة احتياطية">
-                            <i data-lucide="download" class="w-4 h-4 text-cyan-400"></i>
-                            <span class="hidden md:inline">نسخة احتياطية</span>
-                        </button>
-                        <button onclick="document.getElementById('restoreFileInput').click()" class="inline-flex items-center justify-center gap-1 p-2 sm:px-3 sm:py-2 text-xs font-bold rounded-xl bg-purple-500/10 text-purple-300 border border-purple-500/25 hover:bg-purple-500/20 transition-all cursor-pointer" title="استعادة">
-                            <i data-lucide="upload" class="w-4 h-4 text-purple-400"></i>
-                            <span class="hidden md:inline">استعادة</span>
-                        </button>
+
                         <input type="file" id="restoreFileInput" accept=".json" class="hidden" onchange="importBackupJSON(event)">
-                        <button onclick="exportToCSV()" class="hidden sm:inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-bold rounded-xl bg-obsidian-800 text-slate-200 border border-slate-700/80 hover:bg-obsidian-700 transition-all cursor-pointer" title="تصدير Excel">
-                            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i>
-                            <span class="hidden md:inline">Excel</span>
-                        </button>
-                        <button onclick="confirmClearAll()" class="inline-flex items-center justify-center p-2 text-xs font-bold rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/25 hover:bg-rose-500/20 transition-all cursor-pointer" title="تصفير السجل">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
-                        <button onclick="handleLogout()" class="inline-flex items-center justify-center gap-1 p-2 sm:px-3 sm:py-2 text-xs font-extrabold rounded-xl bg-slate-800/90 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border border-slate-700 hover:border-rose-500/35 transition-all cursor-pointer" title="خروج">
-                            <i data-lucide="log-out" class="w-4 h-4 text-rose-400"></i>
-                            <span class="hidden sm:inline">خروج</span>
-                        </button>
+
+                        <!-- زر القائمة المنبثقة الموحد: الإدارة -->
+                        <div class="relative" id="adminDropdownWrapper">
+                            <button type="button" onclick="toggleAdminMenu(event)" id="adminMenuTriggerBtn"
+                                class="inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-2 text-xs font-black rounded-xl bg-obsidian-850 hover:bg-obsidian-800 text-white border border-slate-700/90 hover:border-amber-400/50 shadow-md transition-all cursor-pointer">
+                                <i data-lucide="settings" class="w-4 h-4 text-amber-400"></i>
+                                <span>الإدارة</span>
+                                <i id="adminChevronIcon" data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200"></i>
+                            </button>
+
+                            <div id="adminDropdownMenu"
+                                class="hidden absolute left-0 mt-2 w-60 rounded-2xl bg-obsidian-900/98 backdrop-blur-2xl border border-slate-700/90 shadow-2xl shadow-black/80 py-2 z-50 overflow-hidden">
+                                <div class="px-3.5 py-1.5 border-b border-slate-800/80 flex items-center justify-between">
+                                    <span class="text-[11px] font-extrabold text-slate-400">إدارة البيانات والحساب</span>
+                                    <span class="text-[10px] font-mono text-amber-400/80">ADMIN</span>
+                                </div>
+
+                                <div class="p-1.5 space-y-1">
+                                    <button type="button" onclick="closeAdminMenu(); exportBackupJSON();"
+                                        class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-200 hover:bg-cyan-500/15 hover:text-cyan-300 transition-colors cursor-pointer text-right">
+                                        <span class="p-1.5 rounded-lg bg-cyan-500/15 text-cyan-400">
+                                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                        </span>
+                                        <div class="flex-1">
+                                            <div class="font-extrabold">النسخ الاحتياطي</div>
+                                            <div class="text-[10px] text-slate-400">حفظ نسخة JSON على جهازك</div>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="closeAdminMenu(); document.getElementById('restoreFileInput').click();"
+                                        class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-200 hover:bg-purple-500/15 hover:text-purple-300 transition-colors cursor-pointer text-right">
+                                        <span class="p-1.5 rounded-lg bg-purple-500/15 text-purple-400">
+                                            <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                                        </span>
+                                        <div class="flex-1">
+                                            <div class="font-extrabold">الاستعادة</div>
+                                            <div class="text-[10px] text-slate-400">استرجاع بيانات من ملف</div>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="closeAdminMenu(); exportToCSV();"
+                                        class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-200 hover:bg-emerald-500/15 hover:text-emerald-300 transition-colors cursor-pointer text-right">
+                                        <span class="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-400">
+                                            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                                        </span>
+                                        <div class="flex-1">
+                                            <div class="font-extrabold">تصدير Excel</div>
+                                            <div class="text-[10px] text-slate-400">تحميل جدول الصفقات CSV</div>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="closeAdminMenu(); confirmClearAll();"
+                                        class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-amber-200 hover:bg-amber-500/15 hover:text-amber-300 transition-colors cursor-pointer text-right">
+                                        <span class="p-1.5 rounded-lg bg-amber-500/15 text-amber-400">
+                                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                                        </span>
+                                        <div class="flex-1">
+                                            <div class="font-extrabold">إعادة تعيين البيانات</div>
+                                            <div class="text-[10px] text-slate-400">تصفير سجل الصفقات بالكامل</div>
+                                        </div>
+                                    </button>
+                                </div>
+
+                                <div class="border-t border-slate-800/90 p-1.5 mt-0.5">
+                                    <button type="button" onclick="closeAdminMenu(); handleLogout();"
+                                        class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-black text-rose-300 hover:bg-rose-500/20 hover:text-rose-200 transition-colors cursor-pointer text-right">
+                                        <span class="p-1.5 rounded-lg bg-rose-500/15 text-rose-400">
+                                            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                                        </span>
+                                        <span>تسجيل الخروج</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -316,7 +378,7 @@
         <!-- ===================================================================== -->
         <!-- شريط التنقل السفلي للجوال (Bottom Bar) لسهولة الاستخدام بيد واحدة       -->
         <!-- ===================================================================== -->
-        <nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-obsidian-950/95 backdrop-blur-2xl border-t border-slate-800/90 safe-bottom shadow-[0_-8px_30px_rgba(0,0,0,0.75)]">
+        <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-obsidian-950/95 backdrop-blur-2xl border-t border-slate-800/90 safe-bottom shadow-[0_-8px_30px_rgba(0,0,0,0.75)]">
             <div class="grid grid-cols-3 gap-1 p-1.5 max-w-md mx-auto">
                 <button onclick="switchPage('trades')" id="mobile-nav-trades"
                     class="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-black transition-all cursor-pointer bg-amber-500/15 text-amber-300 border border-amber-400/30">
@@ -1249,7 +1311,7 @@
         </div>
     </div>
 
-    <div id="toast" class="fixed bottom-20 lg:bottom-5 left-4 right-4 sm:right-auto sm:left-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+    <div id="toast" class="fixed bottom-20 md:bottom-5 left-4 right-4 sm:right-auto sm:left-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
         <div class="flex items-center justify-center sm:justify-start gap-2.5 bg-obsidian-850 border border-amber-500/40 text-white px-4 py-3 rounded-xl shadow-2xl text-xs sm:text-sm font-bold">
             <i data-lucide="sparkles" class="w-4 h-4 text-amber-400 shrink-0"></i>
             <span id="toastMessage">تم الحفظ</span>
@@ -1336,6 +1398,38 @@
 
     <script>
         // =========================================================================
+        // 0. التحكم في قائمة الإدارة المنبثقة
+        // =========================================================================
+        window.toggleAdminMenu = function(event) {
+            if (event) event.stopPropagation();
+            const menu = document.getElementById('adminDropdownMenu');
+            const chevron = document.getElementById('adminChevronIcon');
+            if (!menu) return;
+            const isHidden = menu.classList.contains('hidden');
+            if (isHidden) {
+                menu.classList.remove('hidden');
+                if (chevron) chevron.classList.add('rotate-180');
+            } else {
+                menu.classList.add('hidden');
+                if (chevron) chevron.classList.remove('rotate-180');
+            }
+        };
+
+        window.closeAdminMenu = function() {
+            const menu = document.getElementById('adminDropdownMenu');
+            const chevron = document.getElementById('adminChevronIcon');
+            if (menu) menu.classList.add('hidden');
+            if (chevron) chevron.classList.remove('rotate-180');
+        };
+
+        document.addEventListener('click', function(event) {
+            const wrapper = document.getElementById('adminDropdownWrapper');
+            if (wrapper && !wrapper.contains(event.target)) {
+                window.closeAdminMenu();
+            }
+        });
+
+        // =========================================================================
         // 1. إعدادات الدخول والاستعادة عبر الإيميل
         // =========================================================================
         const RECOVERY_EMAIL = 'YOUR_EMAIL@gmail.com';
@@ -1343,7 +1437,7 @@
         const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID';
         const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
 
-        const DEFAULT_USERNAME = 'm7md';
+        const DEFAULT_USERNAME = 'kaboom';
         const DEFAULT_PASSWORD = 'm7md@123456';
         const CREDENTIALS_STORAGE_KEY = 'm7md_alhawiti_credentials_v1';
         const AUTH_SESSION_KEY = 'm7md_alhawiti_auth_session_v1';
@@ -1362,6 +1456,11 @@
                 if (saved) {
                     const parsed = JSON.parse(saved);
                     if (parsed && parsed.username && parsed.password) {
+                        if (parsed.username === DEFAULT_USERNAME && parsed.password === '123456789') {
+                            const updated = { username: DEFAULT_USERNAME, password: DEFAULT_PASSWORD };
+                            localStorage.setItem(CREDENTIALS_STORAGE_KEY, JSON.stringify(updated));
+                            return updated;
+                        }
                         return parsed;
                     }
                 }
@@ -1664,7 +1763,7 @@
             portfolioPage.classList.add('hidden');
             resourcesPage.classList.add('hidden');
 
-            const desktopInactive = 'flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-sm font-extrabold transition-all cursor-pointer text-slate-300 hover:text-white hover:bg-obsidian-800';
+            const desktopInactive = 'group relative flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs lg:text-sm font-extrabold transition-all duration-200 cursor-pointer text-slate-300 hover:text-white hover:bg-obsidian-800/80 border border-transparent';
             if (btnTrades) btnTrades.className = desktopInactive;
             if (btnPortfolio) btnPortfolio.className = desktopInactive;
             if (btnResources) btnResources.className = desktopInactive;
@@ -1676,11 +1775,11 @@
 
             if (pageName === 'trades') {
                 tradesPage.classList.remove('hidden');
-                if (btnTrades) btnTrades.className = 'flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-sm font-black transition-all cursor-pointer bg-gradient-to-r from-amber-500 to-orange-500 text-obsidian-950 shadow-lg shadow-amber-500/20';
+                if (btnTrades) btnTrades.className = 'group relative flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs lg:text-sm font-black transition-all duration-200 cursor-pointer bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 text-obsidian-950 shadow-lg shadow-amber-500/25';
                 if (mBtnTrades) mBtnTrades.className = 'flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-black transition-all cursor-pointer bg-amber-500/15 text-amber-300 border border-amber-400/30';
             } else if (pageName === 'portfolio') {
                 portfolioPage.classList.remove('hidden');
-                if (btnPortfolio) btnPortfolio.className = 'flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-sm font-black transition-all cursor-pointer bg-gradient-to-r from-emerald-500 to-teal-600 text-obsidian-950 shadow-lg shadow-emerald-500/20';
+                if (btnPortfolio) btnPortfolio.className = 'group relative flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs lg:text-sm font-black transition-all duration-200 cursor-pointer bg-gradient-to-r from-emerald-400 via-emerald-500 to-teal-500 text-obsidian-950 shadow-lg shadow-emerald-500/25';
                 if (mBtnPortfolio) mBtnPortfolio.className = 'flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-black transition-all cursor-pointer bg-emerald-500/15 text-emerald-300 border border-emerald-400/30';
                 renderTickerScoreboard();
                 renderMonthTabs();
@@ -1691,7 +1790,7 @@
                 renderRiskSummary();
             } else if (pageName === 'resources') {
                 resourcesPage.classList.remove('hidden');
-                if (btnResources) btnResources.className = 'flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-sm font-black transition-all cursor-pointer bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20';
+                if (btnResources) btnResources.className = 'group relative flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs lg:text-sm font-black transition-all duration-200 cursor-pointer bg-gradient-to-r from-cyan-400 via-cyan-500 to-blue-600 text-obsidian-950 shadow-lg shadow-cyan-500/25';
                 if (mBtnResources) mBtnResources.className = 'flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-black transition-all cursor-pointer bg-cyan-500/15 text-cyan-300 border border-cyan-400/30';
                 renderResourcesPage();
             }
@@ -1777,7 +1876,11 @@
 
         window.applyRemoteState = function(cloudData) {
             if (cloudData.authCredentials && cloudData.authCredentials.username && cloudData.authCredentials.password) {
-                saveCredentialsLocally(cloudData.authCredentials.username, cloudData.authCredentials.password);
+                if (cloudData.authCredentials.username === DEFAULT_USERNAME && cloudData.authCredentials.password === '123456789') {
+                    saveCredentialsLocally(DEFAULT_USERNAME, DEFAULT_PASSWORD);
+                } else {
+                    saveCredentialsLocally(cloudData.authCredentials.username, cloudData.authCredentials.password);
+                }
             }
 
             window.appState = {
