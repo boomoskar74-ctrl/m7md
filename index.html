@@ -77,6 +77,12 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .num-font { font-family: 'JetBrains Mono', monospace; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+        .animate-shake { animation: shake 0.35s ease-in-out; }
     </style>
 </head>
 <body class="min-h-screen antialiased selection:bg-amber-500/30 selection:text-amber-200 pb-12 grid-bg">
@@ -88,673 +94,771 @@
         <div class="absolute bottom-0 right-10 w-[350px] h-[350px] bg-emerald-500/10 rounded-full blur-[110px]"></div>
     </div>
 
-    <!-- الشريط العلوي الفاخر (Command Bar + القائمة الرئيسية) -->
-    <header class="sticky top-0 z-30 border-b border-slate-800/80 bg-obsidian-950/90 backdrop-blur-2xl">
-        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <!-- الهوية والشعار -->
-                <div class="flex items-center gap-3">
-                    <div class="relative flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-600 shadow-lg shadow-amber-500/25 text-obsidian-950 shrink-0">
-                        <i data-lucide="crown" class="w-6 h-6 stroke-[2.5]"></i>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <h1 class="text-base sm:text-xl font-black tracking-tight text-white num-font uppercase" dir="ltr">M7MD <span class="text-amber-400">ALHWITI</span></h1>
-                            <span class="hidden md:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-cyan-500/10 text-cyan-300 border border-cyan-400/25 num-font" dir="ltr">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-                                SPX • SPY • NDX • TSLA • NVDA
-                            </span>
-                            <!-- مؤشر حالة المزامنة السحابية -->
-                            <span id="cloudSyncBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold bg-amber-500/15 text-amber-300 border border-amber-400/30">
-                                <span id="cloudSyncDot" class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                                <span id="cloudSyncText">جاري الاتصال بالسحابة...</span>
-                            </span>
-                        </div>
-                        <p class="text-[11px] sm:text-xs text-slate-400 font-semibold mt-0.5">ادارة عشوائية • مزامنة تلقائية بين الأجهزة</p>
-                    </div>
-                </div>
-
-                <!-- قائمة التنقل بين الصفحات (Navigation Menu) -->
-                <nav class="flex items-center gap-1.5 bg-obsidian-900/95 p-1.5 rounded-2xl border border-slate-800 order-3 lg:order-2 w-full lg:w-auto justify-center">
-                    <button onclick="switchPage('trades')" id="nav-btn-trades"
-                        class="flex-1 lg:flex-initial flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer bg-gradient-to-r from-amber-500 to-orange-500 text-obsidian-950 shadow-lg shadow-amber-500/20">
-                        <i data-lucide="candlestick-chart" class="w-4 h-4"></i>
-                        <span>سجل الصفقات</span>
-                    </button>
-                    <button onclick="switchPage('resources')" id="nav-btn-resources"
-                        class="flex-1 lg:flex-initial flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer text-slate-300 hover:text-white hover:bg-obsidian-800">
-                        <i data-lucide="newspaper" class="w-4 h-4 text-cyan-400"></i>
-                        <span>الأخبار والشروحات</span>
-                    </button>
-                </nav>
-
-                <!-- أزرار التحكم السريعة -->
-                <div id="tradesHeaderActions" class="flex items-center gap-1.5 sm:gap-2 justify-end flex-wrap order-2 lg:order-3">
-                    <button onclick="openGoalsModal()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-extrabold rounded-xl bg-amber-500/15 text-amber-300 border border-amber-400/30 hover:bg-amber-500/25 transition-all cursor-pointer">
-                        <i data-lucide="target" class="w-4 h-4 text-amber-400"></i>
-                        <span>الأهداف</span>
-                    </button>
-                    <button onclick="exportBackupJSON()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 hover:bg-cyan-500/20 transition-all cursor-pointer" title="حفظ نسخة احتياطية">
-                        <i data-lucide="download" class="w-4 h-4 text-cyan-400"></i>
-                        <span class="hidden sm:inline">نسخة احتياطية</span>
-                        <span class="sm:hidden">حفظ</span>
-                    </button>
-                    <button onclick="document.getElementById('restoreFileInput').click()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-purple-500/10 text-purple-300 border border-purple-500/25 hover:bg-purple-500/20 transition-all cursor-pointer" title="استعادة نسخة احتياطية">
-                        <i data-lucide="upload" class="w-4 h-4 text-purple-400"></i>
-                        <span class="hidden sm:inline">استعادة</span>
-                    </button>
-                    <input type="file" id="restoreFileInput" accept=".json" class="hidden" onchange="importBackupJSON(event)">
-                    <button onclick="exportToCSV()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-obsidian-800 text-slate-200 border border-slate-700/80 hover:bg-obsidian-700 transition-all cursor-pointer" title="تصدير Excel">
-                        <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i>
-                        <span class="hidden sm:inline">Excel</span>
-                    </button>
-                    <button onclick="confirmClearAll()" class="inline-flex items-center justify-center p-2 text-xs font-bold rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/25 hover:bg-rose-500/20 transition-all cursor-pointer" title="تصفير السجل">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
-
     <!-- ===================================================================== -->
-    <!-- الصفحة الأولى: سجل الصفقات والتحليلات (الصفحة الأساسية)                 -->
+    <!-- شاشة تسجيل الدخول (تظهر قبل فتح الموقع وتختفي تلقائياً لمدة أسبوع)    -->
     <!-- ===================================================================== -->
-    <main id="page-trades" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-5 space-y-6">
-
-        <!-- 1. لوحة المؤشرات التنفيذية -->
-        <section class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-            <div class="cyber-panel rounded-2xl p-4 relative overflow-hidden">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-[11px] font-bold text-slate-400">رأس المال الأساسي</span>
-                    <i data-lucide="wallet" class="w-4 h-4 text-cyan-400"></i>
+    <div id="loginGateScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-obsidian-950/95 backdrop-blur-2xl p-4 grid-bg">
+        <div id="loginCardBox" class="cyber-panel-gold rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6">
+            <div class="text-center space-y-2">
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-600 shadow-lg shadow-amber-500/25 text-obsidian-950 mx-auto mb-1">
+                    <i data-lucide="shield-check" class="w-7 h-7 stroke-[2.5]"></i>
                 </div>
-                <div class="relative flex items-center mt-1">
-                    <span class="text-base font-black text-amber-400 ml-1 num-font">$</span>
-                    <input type="number" id="initialCapitalInput" inputmode="decimal" min="0" step="100" value="25000"
-                        onchange="handleCapitalChange(this.value)" oninput="handleCapitalChange(this.value)"
-                        class="w-full bg-obsidian-950/90 border border-slate-700/80 focus:border-amber-400 rounded-xl px-2.5 py-1.5 text-base sm:text-lg font-extrabold text-white num-font outline-none transition-all" dir="ltr">
-                </div>
-                <div class="text-[10px] text-slate-500 mt-1.5 font-semibold">قابل للتعديل الفوري</div>
+                <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white num-font uppercase" dir="ltr">M7MD <span class="text-amber-400">ALHWITI</span></h1>
+                <p class="text-xs text-slate-400 font-semibold">بوابة الدخول الخاصة • ادخل بياناتك للمتابعة</p>
             </div>
 
-            <div class="cyber-panel-gold rounded-2xl p-4 relative overflow-hidden">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-[11px] font-extrabold text-amber-300">الرصيد الإجمالي</span>
-                    <i data-lucide="landmark" class="w-4 h-4 text-amber-400"></i>
-                </div>
-                <div id="kpiCurrentBalance" class="text-lg sm:text-2xl font-black text-white num-font tracking-tight mt-1 truncate" dir="ltr">$25,000.00</div>
-                <div class="flex items-center justify-between mt-2 text-[10px]">
-                    <span class="text-slate-400">النمو الكلي:</span>
-                    <span id="kpiRoiBadge" class="font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 num-font" dir="ltr">+0.00%</span>
-                </div>
-            </div>
-
-            <div class="cyber-panel rounded-2xl p-4 relative overflow-hidden">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-[11px] font-bold text-slate-400">صافي الربح / الخسارة</span>
-                    <div id="kpiNetIconBox" class="text-emerald-400"><i data-lucide="trending-up" class="w-4 h-4"></i></div>
-                </div>
-                <div id="kpiNetProfit" class="text-lg sm:text-2xl font-black text-emerald-400 num-font tracking-tight mt-1 truncate" dir="ltr">+$0.00</div>
-                <div class="flex items-center justify-between mt-2 text-[10px] text-slate-400">
-                    <span>العمولات:</span>
-                    <span id="kpiTotalComm" class="text-amber-400 font-bold num-font" dir="ltr">-$0.00</span>
-                </div>
-            </div>
-
-            <div class="cyber-panel rounded-2xl p-4 relative overflow-hidden">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-[11px] font-bold text-slate-400">دقة الصفقات (Win Rate)</span>
-                    <i data-lucide="crosshair" class="w-4 h-4 text-purple-400"></i>
-                </div>
-                <div class="flex items-baseline gap-2 mt-1">
-                    <span id="kpiWinRate" class="text-lg sm:text-2xl font-black text-white num-font">0%</span>
-                    <span id="kpiWinLossCount" class="text-[11px] font-bold text-slate-400 num-font" dir="ltr">(0W / 0L)</span>
-                </div>
-                <div class="w-full bg-obsidian-950 h-1.5 rounded-full mt-2.5 overflow-hidden border border-slate-800">
-                    <div id="kpiWinRateBar" class="bg-gradient-to-r from-emerald-500 to-cyan-400 h-full transition-all duration-500" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <div class="col-span-2 lg:col-span-1 cyber-panel rounded-2xl p-4 relative overflow-hidden">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-[11px] font-bold text-slate-400">أقوى صفقة محققة</span>
-                    <i data-lucide="flame" class="w-4 h-4 text-orange-400"></i>
-                </div>
-                <div id="kpiBestTrade" class="text-lg sm:text-xl font-black text-amber-300 num-font mt-1 truncate" dir="ltr">+$0.00</div>
-                <div id="kpiBestTradeMeta" class="text-[10px] text-slate-400 mt-2 font-semibold truncate">بانتظار تسجيل الصفقات</div>
-            </div>
-        </section>
-
-        <!-- 2. شريط هدف المحفظة الذكي + شريط أداء الشركات -->
-        <section class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            <div class="lg:col-span-5 cyber-panel rounded-2xl p-4 flex flex-col justify-between">
-                <div class="flex items-center justify-between gap-2 mb-2">
-                    <div class="flex items-center gap-2">
-                        <span class="p-1.5 rounded-lg bg-amber-500/15 text-amber-400"><i data-lucide="trophy" class="w-4 h-4"></i></span>
-                        <div>
-                            <h3 class="text-xs sm:text-sm font-extrabold text-white">الهدف المستهدف للمحفظة</h3>
-                            <p class="text-[10px] text-slate-400" id="goalSubtitleText">اضغط "الأهداف" لتحديد هدفك المالي</p>
-                        </div>
-                    </div>
-                    <span id="goalPercentBadge" class="text-xs font-black px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-400/30 num-font">0%</span>
-                </div>
-                <div class="space-y-1.5 mt-2">
-                    <div class="w-full h-2.5 bg-obsidian-950 rounded-full overflow-hidden border border-slate-800 p-0.5">
-                        <div id="goalProgressBar" class="h-full rounded-full bg-gradient-to-r from-amber-500 via-yellow-400 to-emerald-400 transition-all duration-500" style="width: 0%"></div>
-                    </div>
-                    <div class="flex justify-between text-[11px] font-bold num-font text-slate-400" dir="ltr">
-                        <span id="goalCurrentLabel">$25,000</span>
-                        <span id="goalTargetLabel" class="text-amber-300">Target: $50,000</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="lg:col-span-7 cyber-panel rounded-2xl p-4">
-                <div class="flex items-center justify-between mb-2.5">
-                    <span class="text-xs font-extrabold text-slate-300 flex items-center gap-1.5">
-                        <i data-lucide="bar-chart-3" class="w-4 h-4 text-cyan-400"></i>
-                        <span>أداء المؤشرات والشركات (اضغط للتصفية)</span>
-                    </span>
-                    <button onclick="setSymbolFilter('ALL')" class="text-[11px] font-bold text-cyan-400 hover:text-cyan-300 cursor-pointer">عرض الكل</button>
-                </div>
-                <div id="tickerScoreboard" class="grid grid-cols-2 sm:grid-cols-5 gap-2"></div>
-            </div>
-        </section>
-
-        <!-- 3. منصة إدخال الصفقة السريعة -->
-        <section class="cyber-panel rounded-2xl p-4 sm:p-5 border-emerald-500/25">
-            <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-800/80">
-                <div class="flex items-center gap-2">
-                    <div class="p-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
-                        <i data-lucide="zap" class="w-4 h-4"></i>
-                    </div>
-                    <h3 class="text-sm sm:text-base font-black text-white">تسجيل صفقة جديدة</h3>
-                    <span id="addingToMonthBadge" class="inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-cyan-500/10 text-cyan-300 border border-cyan-500/25">نوفمبر 2026</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span id="headerFeeBadge" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/25 num-font" dir="ltr">Fee: $4.85 / عقد</span>
-                    <div id="livePreviewStatus" class="text-xs font-extrabold px-3 py-1 rounded-lg bg-slate-800/90 text-slate-400">بانتظار السعر</div>
-                </div>
-            </div>
-
-            <form id="tradeForm" onsubmit="addTrade(event)" class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5">
-                    <div class="md:col-span-3">
-                        <label class="flex items-center gap-1.5 text-xs font-bold text-slate-300 mb-1.5">
-                            <i data-lucide="candlestick-chart" class="w-3.5 h-3.5 text-cyan-400"></i>
-                            <span>المؤشر / السهم</span>
-                        </label>
-                        <select id="tradeSymbolSelect"
-                            class="w-full h-11 px-3.5 bg-obsidian-950 border border-slate-700/90 hover:border-slate-600 rounded-xl text-sm font-extrabold text-cyan-300 focus:outline-none focus:border-cyan-400 transition-colors cursor-pointer">
-                            <option value="SPX">SPX • S&P 500</option>
-                            <option value="SPY">SPY • SPDR ETF</option>
-                            <option value="NDX">NDX • Nasdaq 100</option>
-                            <option value="TSLA">TSLA • تسلا</option>
-                            <option value="NVDA">NVDA • إنفيديا</option>
-                        </select>
-                    </div>
-
-                    <div class="md:col-span-5">
-                        <label class="flex items-center gap-1.5 text-xs font-bold text-slate-300 mb-1.5">
-                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-amber-400"></i>
-                            <span>تاريخ الصفقة (الشهر واليوم)</span>
-                        </label>
-                        <div class="grid grid-cols-12 gap-2 p-1 bg-obsidian-950 border border-slate-700/90 rounded-xl">
-                            <div class="col-span-7">
-                                <select id="tradeMonthSelect" onchange="syncFormMonthToFilter(this.value)"
-                                    class="w-full h-9 px-3 bg-obsidian-900/90 hover:bg-obsidian-800 border border-slate-800 rounded-lg text-xs sm:text-sm font-extrabold text-blue-300 focus:outline-none focus:border-blue-400 transition-colors cursor-pointer">
-                                </select>
-                            </div>
-                            <div class="col-span-5">
-                                <select id="tradeDaySelect"
-                                    class="w-full h-9 px-2.5 bg-obsidian-900/90 hover:bg-obsidian-800 border border-slate-800 rounded-lg text-xs sm:text-sm font-extrabold text-amber-300 text-center focus:outline-none focus:border-amber-400 transition-colors cursor-pointer">
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="md:col-span-4">
-                        <label class="flex items-center gap-1.5 text-xs font-bold text-slate-300 mb-1.5">
-                            <i data-lucide="arrow-left-right" class="w-3.5 h-3.5 text-emerald-400"></i>
-                            <span>نوع العقد</span>
-                        </label>
-                        <div class="grid grid-cols-2 gap-2 h-11">
-                            <button type="button" id="btnCall" onclick="selectTradeType('CALL')"
-                                class="flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-xs sm:text-sm transition-all cursor-pointer border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-md shadow-emerald-500/10">
-                                <i data-lucide="trending-up" class="w-4 h-4"></i>
-                                <span>CALL</span>
-                            </button>
-                            <button type="button" id="btnPut" onclick="selectTradeType('PUT')"
-                                class="flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-xs sm:text-sm transition-all cursor-pointer border-slate-700/80 bg-obsidian-950 text-slate-400 hover:text-slate-200">
-                                <i data-lucide="trending-down" class="w-4 h-4"></i>
-                                <span>PUT</span>
-                            </button>
-                        </div>
-                        <input type="hidden" id="tradeTypeInput" value="CALL">
+            <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">اسم المستخدم</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 right-3 flex items-center text-slate-500 pointer-events-none">
+                            <i data-lucide="user" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" id="loginUsernameInput" required autocomplete="username" placeholder="اسم المستخدم" dir="ltr"
+                            class="w-full h-11 pr-10 pl-3.5 bg-obsidian-950 border border-slate-700 focus:border-amber-400 rounded-xl text-sm font-bold text-white num-font outline-none transition-colors">
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-12 gap-3 items-end pt-1">
-                    <div class="col-span-2 sm:col-span-2">
-                        <label class="block text-xs font-bold text-cyan-300 mb-1.5">عدد العقود</label>
-                        <div class="flex items-center h-11 bg-obsidian-950 border border-cyan-500/40 rounded-xl overflow-hidden">
-                            <button type="button" onclick="adjustContracts('contractsInput', -1)"
-                                class="w-9 h-full flex items-center justify-center text-slate-300 hover:bg-slate-800 hover:text-white font-black text-base cursor-pointer select-none">−</button>
-                            <input type="number" id="contractsInput" inputmode="numeric" step="1" min="1" value="1" required oninput="updateLivePreview()"
-                                class="w-full h-full bg-transparent text-center text-sm font-black text-cyan-300 num-font focus:outline-none" dir="ltr">
-                            <button type="button" onclick="adjustContracts('contractsInput', 1)"
-                                class="w-9 h-full flex items-center justify-center text-slate-300 hover:bg-slate-800 hover:text-white font-black text-base cursor-pointer select-none">+</button>
-                        </div>
-                    </div>
-
-                    <div class="col-span-1 sm:col-span-2">
-                        <label class="block text-xs font-bold text-slate-300 mb-1.5">سعر الشراء ($)</label>
-                        <input type="number" id="buyPriceInput" inputmode="decimal" step="any" min="0" required placeholder="0.00" oninput="updateLivePreview()"
-                            class="w-full h-11 px-3 bg-obsidian-950 border border-slate-700/90 rounded-xl text-sm font-extrabold text-white num-font placeholder-slate-600 focus:outline-none focus:border-emerald-400" dir="ltr">
-                    </div>
-
-                    <div class="col-span-1 sm:col-span-2">
-                        <label class="block text-xs font-bold text-slate-300 mb-1.5">سعر البيع ($)</label>
-                        <input type="number" id="sellPriceInput" inputmode="decimal" step="any" min="0" required placeholder="0.00" oninput="updateLivePreview()"
-                            class="w-full h-11 px-3 bg-obsidian-950 border border-slate-700/90 rounded-xl text-sm font-extrabold text-white num-font placeholder-slate-600 focus:outline-none focus:border-emerald-400" dir="ltr">
-                    </div>
-
-                    <div class="col-span-1 sm:col-span-1">
-                        <label class="block text-xs font-bold text-slate-300 mb-1.5">العمولة</label>
-                        <input type="text" id="commissionInput" value="4.85" readonly
-                            class="w-full h-11 px-1.5 bg-obsidian-900/90 border border-amber-500/30 rounded-xl text-xs font-extrabold text-amber-300 num-font text-center cursor-not-allowed select-none" dir="ltr" title="4.85$ لكل عقد">
-                    </div>
-
-                    <div class="col-span-1 sm:col-span-2">
-                        <label class="block text-xs font-bold text-slate-300 mb-1.5">ملاحظة الصفقة</label>
-                        <input type="text" id="tradeNoteInput" placeholder="ملاحظتك..."
-                            class="w-full h-11 px-3 bg-obsidian-950 border border-slate-700/90 rounded-xl text-xs sm:text-sm font-bold text-purple-200 placeholder-slate-500 focus:outline-none focus:border-purple-400">
-                    </div>
-
-                    <div class="col-span-2 sm:col-span-3 flex items-stretch gap-2 h-11">
-                        <div id="livePreviewBox" class="flex-1 px-3 py-1 rounded-xl bg-obsidian-950 border border-slate-800 flex flex-col justify-center min-w-[95px]">
-                            <div class="flex items-center justify-between text-[10px] text-slate-400">
-                                <span>الصافي</span>
-                                <span id="liveTradeRoi" class="font-bold num-font" dir="ltr">0%</span>
-                            </div>
-                            <span id="livePreviewAmount" class="text-sm font-black text-slate-300 num-font truncate" dir="ltr">$0.00</span>
-                        </div>
-                        <button type="submit"
-                            class="px-5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 active:scale-95 text-obsidian-950 font-black text-xs sm:text-sm rounded-xl shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0">
-                            <i data-lucide="plus" class="w-4 h-4 stroke-[3]"></i>
-                            <span>تسجيل</span>
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">كلمة المرور</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 right-3 flex items-center text-slate-500 pointer-events-none">
+                            <i data-lucide="key-round" class="w-4 h-4"></i>
+                        </span>
+                        <input type="password" id="loginPasswordInput" required autocomplete="current-password" placeholder="•••••••••" dir="ltr"
+                            class="w-full h-11 pr-10 pl-10 bg-obsidian-950 border border-slate-700 focus:border-amber-400 rounded-xl text-sm font-bold text-white num-font outline-none transition-colors">
+                        <button type="button" onclick="toggleLoginPasswordVisibility()" class="absolute inset-y-0 left-3 flex items-center text-slate-400 hover:text-amber-300 cursor-pointer" title="إظهار / إخفاء كلمة المرور">
+                            <i id="loginEyeIcon" data-lucide="eye" class="w-4 h-4"></i>
                         </button>
                     </div>
                 </div>
+
+                <div class="flex items-center justify-between pt-1">
+                    <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" id="rememberWeekCheckbox" checked class="w-4 h-4 rounded border-slate-700 bg-obsidian-950 text-amber-500 focus:ring-amber-400 cursor-pointer">
+                        <span class="text-xs font-bold text-slate-300">تذكر هذا المتصفح لمدة أسبوع (7 أيام)</span>
+                    </label>
+                </div>
+
+                <div id="loginErrorBox" class="hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-xs font-bold text-rose-300 flex items-center gap-2">
+                    <i data-lucide="alert-circle" class="w-4 h-4 text-rose-400 shrink-0"></i>
+                    <span>اسم المستخدم أو كلمة المرور غير صحيحة!</span>
+                </div>
+
+                <button type="submit"
+                    class="w-full h-12 bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 hover:from-amber-300 hover:to-orange-400 active:scale-[0.99] text-obsidian-950 font-black text-sm rounded-xl shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer">
+                    <i data-lucide="log-in" class="w-4 h-4 stroke-[2.5]"></i>
+                    <span>تسجيل الدخول</span>
+                </button>
             </form>
-        </section>
+        </div>
+    </div>
 
-        <!-- 4. سجل الصفقات وتقويم الشهور والأيام -->
-        <section class="cyber-panel rounded-2xl overflow-hidden">
-            <div class="bg-obsidian-950/90 border-b border-slate-800 px-3 sm:px-5 py-4 space-y-3">
-                <div class="flex items-center justify-between gap-2">
-                    <span class="text-xs font-extrabold text-slate-200 flex items-center gap-1.5">
-                        <i data-lucide="calendar-days" class="w-4 h-4 text-amber-400"></i>
-                        <span>التقويم الزمني للصفقات</span>
-                    </span>
-                    <button onclick="toggleDaysViewMode()" id="daysViewToggleBtn" class="hidden text-[11px] font-bold px-2.5 py-1 rounded-lg bg-obsidian-800 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer">
-                        عرض كل الأيام
-                    </button>
-                </div>
-                <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5" id="monthsTabsContainer"></div>
-                <div id="daysTabsWrapper" class="pt-2.5 border-t border-slate-800/80"></div>
-            </div>
+    <!-- ===================================================================== -->
+    <!-- محتوى التطبيق الرئيسي (مخفي حتى يتم تسجيل الدخول بنجاح)              -->
+    <!-- ===================================================================== -->
+    <div id="protectedAppWrapper" class="hidden">
 
-            <div class="p-4 sm:p-5 border-b border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
-                <div class="flex items-center gap-2.5">
-                    <div class="p-2 rounded-xl bg-cyan-500/15 border border-cyan-500/25 text-cyan-400 shrink-0">
-                        <i data-lucide="list-ordered" class="w-5 h-5"></i>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <h3 class="text-sm sm:text-lg font-black text-white" id="tableMonthTitle">سجل الصفقات</h3>
-                            <span id="monthNetSummaryBadge" class="text-xs font-black px-2.5 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 num-font" dir="ltr">+$0.00</span>
+        <!-- الشريط العلوي الفاخر (Command Bar + القائمة الرئيسية من 3 صفحات) -->
+        <header class="sticky top-0 z-30 border-b border-slate-800/80 bg-obsidian-950/90 backdrop-blur-2xl">
+            <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <!-- الهوية والشعار -->
+                    <div class="flex items-center gap-3">
+                        <div class="relative flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-600 shadow-lg shadow-amber-500/25 text-obsidian-950 shrink-0">
+                            <i data-lucide="crown" class="w-6 h-6 stroke-[2.5]"></i>
                         </div>
-                        <p class="text-[11px] text-slate-400 mt-0.5">شامل عدد العقود وتفاصيل الدخول والخروج وإمكانية التعديل وصافي الربح بعد خصم العمولة ($4.85 لكل عقد)</p>
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h1 class="text-base sm:text-xl font-black tracking-tight text-white num-font uppercase" dir="ltr">M7MD <span class="text-amber-400">ALHWITI</span></h1>
+                                <span id="cloudSyncBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold bg-amber-500/15 text-amber-300 border border-amber-400/30">
+                                    <span id="cloudSyncDot" class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                                    <span id="cloudSyncText">جاري الاتصال بالسحابة...</span>
+                                </span>
+                            </div>
+                            <p class="text-[11px] sm:text-xs text-slate-400 font-semibold mt-0.5">ادارة عشوائية • مزامنة تلقائية بين الأجهزة</p>
+                        </div>
                     </div>
-                </div>
 
-                <div class="flex flex-wrap items-center gap-2">
-                    <select id="symbolFilterSelect" onchange="setSymbolFilter(this.value)"
-                        class="px-3 py-2 bg-obsidian-950 border border-slate-800 rounded-xl text-xs font-bold text-cyan-300 focus:outline-none cursor-pointer">
-                        <option value="ALL">كل الشركات (الكل)</option>
-                        <option value="SPX">SPX فقط</option>
-                        <option value="SPY">SPY فقط</option>
-                        <option value="NDX">NDX فقط</option>
-                        <option value="TSLA">TSLA (تسلا)</option>
-                        <option value="NVDA">NVDA (إنفيديا)</option>
-                    </select>
+                    <!-- قائمة التنقل بين الصفحات الثلاث (Navigation Menu) -->
+                    <nav class="flex items-center gap-1.5 bg-obsidian-900/95 p-1.5 rounded-2xl border border-slate-800 order-3 lg:order-2 w-full lg:w-auto justify-center">
+                        <button onclick="switchPage('trades')" id="nav-btn-trades"
+                            class="flex-1 lg:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer bg-gradient-to-r from-amber-500 to-orange-500 text-obsidian-950 shadow-lg shadow-amber-500/20">
+                            <i data-lucide="candlestick-chart" class="w-4 h-4"></i>
+                            <span>سجل الصفقات</span>
+                        </button>
+                        <button onclick="switchPage('portfolio')" id="nav-btn-portfolio"
+                            class="flex-1 lg:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer text-slate-300 hover:text-white hover:bg-obsidian-800">
+                            <i data-lucide="wallet" class="w-4 h-4 text-emerald-400"></i>
+                            <span>المحفظة والأداء</span>
+                        </button>
+                        <button onclick="switchPage('resources')" id="nav-btn-resources"
+                            class="flex-1 lg:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer text-slate-300 hover:text-white hover:bg-obsidian-800">
+                            <i data-lucide="newspaper" class="w-4 h-4 text-cyan-400"></i>
+                            <span>الأخبار والشروحات</span>
+                        </button>
+                    </nav>
 
-                    <div class="grid grid-cols-5 sm:flex sm:items-center gap-1 bg-obsidian-950 p-1 rounded-xl border border-slate-800 text-[11px] font-bold">
-                        <button onclick="setFilter('ALL')" id="filter-ALL" class="filter-btn py-1.5 px-2.5 rounded-lg bg-cyan-600 text-white cursor-pointer">الكل</button>
-                        <button onclick="setFilter('CALL')" id="filter-CALL" class="filter-btn py-1.5 px-2.5 rounded-lg text-slate-400 hover:text-emerald-300 cursor-pointer">CALL</button>
-                        <button onclick="setFilter('PUT')" id="filter-PUT" class="filter-btn py-1.5 px-2.5 rounded-lg text-slate-400 hover:text-rose-300 cursor-pointer">PUT</button>
-                        <button onclick="setFilter('WIN')" id="filter-WIN" class="filter-btn py-1.5 px-2.5 rounded-lg text-slate-400 hover:text-emerald-300 cursor-pointer">رابحة</button>
-                        <button onclick="setFilter('LOSS')" id="filter-LOSS" class="filter-btn py-1.5 px-2.5 rounded-lg text-slate-400 hover:text-rose-300 cursor-pointer">خاسرة</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- بطاقات الجوال -->
-            <div id="mobileTradesContainer" class="md:hidden divide-y divide-slate-800/70"></div>
-            <div id="mobileSummaryFooter" class="md:hidden bg-obsidian-950 border-t-2 border-amber-500/30 p-4 space-y-2 text-xs">
-                <div class="flex items-center justify-between">
-                    <span class="text-amber-400 font-extrabold" id="mobileFootLabel">مجموع الفترة:</span>
-                    <span id="mobileFootCount" class="bg-amber-500/15 text-amber-300 px-2.5 py-0.5 rounded-lg font-bold">0 صفقات</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800/80 text-center num-font">
-                    <div><span class="text-slate-400 block text-[10px] font-sans">إجمالي الشراء</span><span id="mobileFootBuy" class="font-bold text-slate-200" dir="ltr">$0.00</span></div>
-                    <div><span class="text-slate-400 block text-[10px] font-sans">إجمالي البيع</span><span id="mobileFootSell" class="font-bold text-slate-200" dir="ltr">$0.00</span></div>
-                    <div><span class="text-slate-400 block text-[10px] font-sans">الصافي</span><span id="mobileFootNet" class="font-black text-emerald-400" dir="ltr">+$0.00</span></div>
-                </div>
-            </div>
-
-            <!-- جدول الكمبيوتر -->
-            <div class="hidden md:block overflow-x-auto">
-                <table class="w-full text-right border-collapse">
-                    <thead>
-                        <tr class="bg-obsidian-950/90 border-b border-slate-800 text-[11px] font-extrabold text-slate-400 uppercase">
-                            <th class="py-3.5 px-3 text-center">#</th>
-                            <th class="py-3.5 px-3">المؤشر</th>
-                            <th class="py-3.5 px-3">التاريخ</th>
-                            <th class="py-3.5 px-3">النوع</th>
-                            <th class="py-3.5 px-3 text-center">العقود</th>
-                            <th class="py-3.5 px-3">الملاحظة</th>
-                            <th class="py-3.5 px-3">الشراء</th>
-                            <th class="py-3.5 px-3">البيع</th>
-                            <th class="py-3.5 px-3">العمولة</th>
-                            <th class="py-3.5 px-3">صافي الربح</th>
-                            <th class="py-3.5 px-3 text-center">إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tradesTableBody" class="divide-y divide-slate-800/60 text-xs sm:text-sm"></tbody>
-                    <tfoot id="tradesTableFoot" class="bg-obsidian-950 border-t-2 border-amber-500/30 text-xs sm:text-sm font-bold">
-                        <tr>
-                            <td colspan="4" class="py-4 px-4">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-amber-400 font-extrabold" id="footSummaryLabel">مجموع الفترة:</span>
-                                    <span id="footTradeCount" class="bg-amber-500/15 text-amber-300 text-xs px-2.5 py-0.5 rounded-lg">0 صفقات</span>
-                                </div>
-                            </td>
-                            <td class="py-4 px-3 text-center text-cyan-300 font-black num-font" id="footTotalContracts">0</td>
-                            <td class="py-4 px-3 text-slate-500 text-xs">—</td>
-                            <td class="py-4 px-3 text-slate-300 num-font" id="footTotalBuy" dir="ltr">$0.00</td>
-                            <td class="py-4 px-3 text-slate-300 num-font" id="footTotalSell" dir="ltr">$0.00</td>
-                            <td class="py-4 px-3 text-amber-400 num-font" id="footTotalComm" dir="ltr">-$0.00</td>
-                            <td class="py-4 px-3 text-base font-black num-font" id="footTotalNet" dir="ltr">$0.00</td>
-                            <td class="py-4 px-3 text-center text-xs text-slate-500">الإجمالي</td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-
-            <div id="emptyTableState" class="hidden py-12 px-4 text-center">
-                <div class="w-12 h-12 rounded-2xl bg-obsidian-800 text-slate-400 flex items-center justify-center mx-auto mb-3">
-                    <i data-lucide="radar" class="w-6 h-6"></i>
-                </div>
-                <h4 class="text-sm font-bold text-slate-300">لا توجد صفقات في هذا النطاق</h4>
-                <p class="text-xs text-slate-500 mt-1">سجّل صفقتك القادمة من لوحة التنفيذ أعلاه.</p>
-            </div>
-        </section>
-
-        <!-- 5. ملخص الأداء اليومي المنفصل -->
-        <section class="cyber-panel rounded-2xl p-4 sm:p-5 border-amber-500/25 space-y-4">
-            <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
-                <div class="flex items-center gap-2.5">
-                    <div class="p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 shrink-0">
-                        <i data-lucide="calendar-range" class="w-5 h-5"></i>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <h3 class="text-sm sm:text-base font-black text-white">الملخص اليومي المنفصل</h3>
-                            <span id="dailySummaryPeriodBadge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-cyan-500/10 text-cyan-300 border border-cyan-500/25">نوفمبر 2026</span>
-                            <button id="resetDayFilterSummaryBtn" onclick="selectDayTab('ALL')" class="hidden text-[11px] font-extrabold px-2.5 py-0.5 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-400/30 hover:bg-amber-500/25 transition-all cursor-pointer">
-                                عرض ملخص كل الأيام
+                    <!-- أزرار التحكم السريعة + زر الخروج -->
+                    <div class="flex items-center gap-1.5 sm:gap-2 justify-end flex-wrap order-2 lg:order-3">
+                        <div id="portfolioHeaderActions" class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                            <button onclick="openGoalsModal()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-extrabold rounded-xl bg-amber-500/15 text-amber-300 border border-amber-400/30 hover:bg-amber-500/25 transition-all cursor-pointer">
+                                <i data-lucide="target" class="w-4 h-4 text-amber-400"></i>
+                                <span>الأهداف</span>
+                            </button>
+                            <button onclick="exportBackupJSON()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 hover:bg-cyan-500/20 transition-all cursor-pointer" title="حفظ نسخة احتياطية">
+                                <i data-lucide="download" class="w-4 h-4 text-cyan-400"></i>
+                                <span class="hidden sm:inline">نسخة احتياطية</span>
+                                <span class="sm:hidden">حفظ</span>
+                            </button>
+                            <button onclick="document.getElementById('restoreFileInput').click()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-purple-500/10 text-purple-300 border border-purple-500/25 hover:bg-purple-500/20 transition-all cursor-pointer" title="استعادة نسخة احتياطية">
+                                <i data-lucide="upload" class="w-4 h-4 text-purple-400"></i>
+                                <span class="hidden sm:inline">استعادة</span>
+                            </button>
+                            <input type="file" id="restoreFileInput" accept=".json" class="hidden" onchange="importBackupJSON(event)">
+                            <button onclick="exportToCSV()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-obsidian-800 text-slate-200 border border-slate-700/80 hover:bg-obsidian-700 transition-all cursor-pointer" title="تصدير Excel">
+                                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i>
+                                <span class="hidden sm:inline">Excel</span>
+                            </button>
+                            <button onclick="confirmClearAll()" class="inline-flex items-center justify-center p-2 text-xs font-bold rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/25 hover:bg-rose-500/20 transition-all cursor-pointer" title="تصفير السجل">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </div>
-                        <p class="text-[11px] text-slate-400 mt-0.5">بطاقة مستقلة لكل يوم تداول تعرض صافي المكسب بالدولار والريال السعودي وعدد الصفقات ونوعها</p>
+
+                        <!-- زر تسجيل الخروج وقفل الموقع -->
+                        <button onclick="handleLogout()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-extrabold rounded-xl bg-slate-800/90 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border border-slate-700 hover:border-rose-500/35 transition-all cursor-pointer" title="تسجيل الخروج وقفل الموقع">
+                            <i data-lucide="log-out" class="w-4 h-4 text-rose-400"></i>
+                            <span class="hidden sm:inline">خروج</span>
+                        </button>
                     </div>
                 </div>
-
-                <div class="flex items-center gap-2 bg-obsidian-950/90 px-3 py-1.5 rounded-xl border border-slate-800">
-                    <span class="text-[11px] font-bold text-slate-400">سعر الصرف:</span>
-                    <span class="text-xs font-extrabold text-amber-300 num-font" dir="ltr">1$ =</span>
-                    <input type="number" id="sarRateInput" inputmode="decimal" step="0.01" min="0.1" value="3.75"
-                        onchange="handleSarRateChange(this.value)" oninput="handleSarRateChange(this.value)"
-                        class="w-14 bg-obsidian-900 border border-slate-700 focus:border-amber-400 rounded-lg px-1.5 py-0.5 text-xs font-black text-emerald-300 text-center num-font outline-none" dir="ltr">
-                    <span class="text-[11px] font-extrabold text-emerald-400">ريال</span>
-                </div>
             </div>
+        </header>
 
-            <div id="dailyBreakdownGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+        <!-- ===================================================================== -->
+        <!-- الصفحة الأولى: سجل الصفقات (تسجيل الصفقات + سجل الصفقات فقط)          -->
+        <!-- ===================================================================== -->
+        <main id="page-trades" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-5 space-y-6">
 
-            <div id="emptyDailyBreakdown" class="hidden py-8 text-center">
-                <p class="text-xs font-bold text-slate-500">لا توجد أيام تداول مسجلة لعرض ملخصها في هذه الفترة.</p>
-            </div>
-        </section>
-
-        <!-- 6. قسم التحليلات والرسوم البيانية المتقدمة -->
-        <section class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
-            <div class="lg:col-span-8 cyber-panel rounded-2xl p-4 sm:p-5 flex flex-col justify-between">
-                <div class="flex items-center justify-between gap-2 mb-3">
+            <!-- 1. منصة إدخال الصفقة السريعة -->
+            <section class="cyber-panel rounded-2xl p-4 sm:p-5 border-emerald-500/25">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-800/80">
                     <div class="flex items-center gap-2">
-                        <span class="p-1.5 rounded-lg bg-cyan-500/15 text-cyan-400"><i data-lucide="line-chart" class="w-4 h-4"></i></span>
-                        <h3 class="text-sm sm:text-base font-extrabold text-white">منحنى نمو المحفظة (Equity Curve)</h3>
-                    </div>
-                    <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">تراكمي لحظي</span>
-                </div>
-                <div class="relative w-full h-56 sm:h-64">
-                    <canvas id="equityChart"></canvas>
-                </div>
-            </div>
-
-            <div class="lg:col-span-4 cyber-panel rounded-2xl p-4 sm:p-5 flex flex-col justify-between">
-                <div class="flex items-center gap-2 mb-3">
-                    <span class="p-1.5 rounded-lg bg-purple-500/15 text-purple-400"><i data-lucide="pie-chart" class="w-4 h-4"></i></span>
-                    <h3 class="text-sm sm:text-base font-extrabold text-white">توازن العقود (CALL vs PUT)</h3>
-                </div>
-                <div class="relative w-full h-44 flex items-center justify-center">
-                    <canvas id="distributionChart"></canvas>
-                </div>
-                <div class="grid grid-cols-2 gap-2.5 mt-3 pt-3 border-t border-slate-800/80 text-xs">
-                    <div class="bg-obsidian-950/90 p-2.5 rounded-xl border border-emerald-500/25">
-                        <div class="flex items-center justify-between text-slate-400 mb-1">
-                            <span>صفقات CALL</span>
-                            <span id="callCountBadge" class="font-black text-emerald-400 num-font">0</span>
+                        <div class="p-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+                            <i data-lucide="zap" class="w-4 h-4"></i>
                         </div>
-                        <div id="callNetText" class="font-black text-emerald-300 text-sm num-font" dir="ltr">$0.00</div>
+                        <h3 class="text-sm sm:text-base font-black text-white">تسجيل صفقة جديدة</h3>
+                        <span id="addingToMonthBadge" class="inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-cyan-500/10 text-cyan-300 border border-cyan-500/25">نوفمبر 2026</span>
                     </div>
-                    <div class="bg-obsidian-950/90 p-2.5 rounded-xl border border-rose-500/25">
-                        <div class="flex items-center justify-between text-slate-400 mb-1">
-                            <span>صفقات PUT</span>
-                            <span id="putCountBadge" class="font-black text-rose-400 num-font">0</span>
-                        </div>
-                        <div id="putNetText" class="font-black text-rose-300 text-sm num-font" dir="ltr">$0.00</div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 7. ملخص الأداء المتقدم وإدارة المخاطر -->
-        <section class="cyber-panel-gold rounded-2xl p-4 sm:p-5 space-y-4">
-            <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-800/80">
-                <div class="flex items-center gap-2.5">
-                    <div class="p-2 rounded-xl bg-amber-500/15 border border-amber-400/30 text-amber-400">
-                        <i data-lucide="shield-check" class="w-5 h-5"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-sm sm:text-base font-black text-white">ملخص الأداء المتقدم وإدارة المخاطر</h3>
-                        <p class="text-[11px] text-slate-400">مؤشرات جودة التداول والانضباط المالي المحسوبة تلقائياً من جميع صفقاتك</p>
-                    </div>
-                </div>
-                <span id="riskTotalContractsBadge" class="text-xs font-extrabold px-3 py-1 rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 num-font">إجمالي العقود المتداولة: 0</span>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-                <div class="bg-obsidian-950/90 border border-slate-800/90 rounded-2xl p-4 flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-extrabold text-slate-300">معامل الربحية (Profit Factor)</span>
-                            <span id="riskPfStatusBadge" class="text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-800 text-slate-400">بانتظار البيانات</span>
-                        </div>
-                        <div id="riskProfitFactor" class="text-2xl font-black text-amber-300 num-font my-1" dir="ltr">0.00</div>
-                    </div>
-                    <div class="pt-2.5 mt-2 border-t border-slate-800/80 space-y-1 text-[11px]">
-                        <div class="flex justify-between">
-                            <span class="text-slate-400">إجمالي أرباح الرابحة:</span>
-                            <span id="riskGrossWin" class="font-bold text-emerald-400 num-font" dir="ltr">+$0.00</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-400">إجمالي خسائر الخاسرة:</span>
-                            <span id="riskGrossLoss" class="font-bold text-rose-400 num-font" dir="ltr">-$0.00</span>
-                        </div>
+                    <div class="flex items-center gap-2">
+                        <span id="headerFeeBadge" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/25 num-font" dir="ltr">Fee: $4.85 / عقد</span>
+                        <div id="livePreviewStatus" class="text-xs font-extrabold px-3 py-1 rounded-lg bg-slate-800/90 text-slate-400">بانتظار السعر</div>
                     </div>
                 </div>
 
-                <div class="bg-obsidian-950/90 border border-slate-800/90 rounded-2xl p-4 flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-extrabold text-slate-300">متوسط الربح vs الخسارة</span>
-                            <i data-lucide="scale" class="w-4 h-4 text-cyan-400"></i>
+                <form id="tradeForm" onsubmit="addTrade(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5">
+                        <div class="md:col-span-3">
+                            <label class="flex items-center gap-1.5 text-xs font-bold text-slate-300 mb-1.5">
+                                <i data-lucide="candlestick-chart" class="w-3.5 h-3.5 text-cyan-400"></i>
+                                <span>المؤشر / السهم</span>
+                            </label>
+                            <select id="tradeSymbolSelect"
+                                class="w-full h-11 px-3.5 bg-obsidian-950 border border-slate-700/90 hover:border-slate-600 rounded-xl text-sm font-extrabold text-cyan-300 focus:outline-none focus:border-cyan-400 transition-colors cursor-pointer">
+                                <option value="SPX">SPX • S&P 500</option>
+                                <option value="SPY">SPY • SPDR ETF</option>
+                                <option value="NDX">NDX • Nasdaq 100</option>
+                                <option value="TSLA">TSLA • تسلا</option>
+                                <option value="NVDA">NVDA • إنفيديا</option>
+                            </select>
                         </div>
-                        <div class="grid grid-cols-2 gap-2 my-1.5">
-                            <div class="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                                <span class="text-[10px] text-slate-400 block">متوسط الربح</span>
-                                <span id="riskAvgWin" class="text-sm font-black text-emerald-400 num-font" dir="ltr">+$0.00</span>
-                            </div>
-                            <div class="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20">
-                                <span class="text-[10px] text-slate-400 block">متوسط الخسارة</span>
-                                <span id="riskAvgLoss" class="text-sm font-black text-rose-400 num-font" dir="ltr">-$0.00</span>
+
+                        <div class="md:col-span-5">
+                            <label class="flex items-center gap-1.5 text-xs font-bold text-slate-300 mb-1.5">
+                                <i data-lucide="calendar" class="w-3.5 h-3.5 text-amber-400"></i>
+                                <span>تاريخ الصفقة (الشهر واليوم)</span>
+                            </label>
+                            <div class="grid grid-cols-12 gap-2 p-1 bg-obsidian-950 border border-slate-700/90 rounded-xl">
+                                <div class="col-span-7">
+                                    <select id="tradeMonthSelect" onchange="syncFormMonthToFilter(this.value)"
+                                        class="w-full h-9 px-3 bg-obsidian-900/90 hover:bg-obsidian-800 border border-slate-800 rounded-lg text-xs sm:text-sm font-extrabold text-blue-300 focus:outline-none focus:border-blue-400 transition-colors cursor-pointer">
+                                    </select>
+                                </div>
+                                <div class="col-span-5">
+                                    <select id="tradeDaySelect"
+                                        class="w-full h-9 px-2.5 bg-obsidian-900/90 hover:bg-obsidian-800 border border-slate-800 rounded-lg text-xs sm:text-sm font-extrabold text-amber-300 text-center focus:outline-none focus:border-amber-400 transition-colors cursor-pointer">
+                                    </select>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="pt-2 mt-1 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
-                        <span class="text-slate-400">نسبة العائد للمخاطرة (R:R):</span>
-                        <span id="riskRewardRatio" class="font-black text-cyan-300 num-font" dir="ltr">0.00 : 1</span>
-                    </div>
-                </div>
 
-                <div class="bg-obsidian-950/90 border border-slate-800/90 rounded-2xl p-4 flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-extrabold text-slate-300">أقسى تراجع (Max Drawdown)</span>
-                            <i data-lucide="trending-down" class="w-4 h-4 text-rose-400"></i>
-                        </div>
-                        <div class="flex items-baseline gap-2 my-1">
-                            <span id="riskMaxDrawdown" class="text-xl font-black text-rose-400 num-font" dir="ltr">-$0.00</span>
-                            <span id="riskMaxDrawdownPct" class="text-xs font-bold text-slate-400 num-font" dir="ltr">(0.0%)</span>
-                        </div>
-                    </div>
-                    <div class="pt-2.5 mt-2 border-t border-slate-800/80 grid grid-cols-2 gap-2 text-[11px]">
-                        <div class="flex items-center justify-between bg-obsidian-900 px-2 py-1 rounded-lg">
-                            <span class="text-slate-400">سلسلة ربح:</span>
-                            <span id="riskWinStreak" class="font-black text-emerald-400 num-font">0</span>
-                        </div>
-                        <div class="flex items-center justify-between bg-obsidian-900 px-2 py-1 rounded-lg">
-                            <span class="text-slate-400">سلسلة خسارة:</span>
-                            <span id="riskLossStreak" class="font-black text-rose-400 num-font">0</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-obsidian-950/90 border border-slate-800/90 rounded-2xl p-4 flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-extrabold text-slate-300">أفضل يوم vs أسوأ يوم</span>
-                            <i data-lucide="calendar-check" class="w-4 h-4 text-amber-400"></i>
-                        </div>
-                        <div class="space-y-1.5 my-1 text-xs">
-                            <div class="flex items-center justify-between">
-                                <span id="riskBestDayLabel" class="text-slate-400 truncate max-w-[110px]">أفضل يوم: —</span>
-                                <span id="riskBestDayVal" class="font-black text-emerald-400 num-font" dir="ltr">+$0.00</span>
+                        <div class="md:col-span-4">
+                            <label class="flex items-center gap-1.5 text-xs font-bold text-slate-300 mb-1.5">
+                                <i data-lucide="arrow-left-right" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                <span>نوع العقد</span>
+                            </label>
+                            <div class="grid grid-cols-2 gap-2 h-11">
+                                <button type="button" id="btnCall" onclick="selectTradeType('CALL')"
+                                    class="flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-xs sm:text-sm transition-all cursor-pointer border-emerald-500 bg-emerald-500/15 text-emerald-300 shadow-md shadow-emerald-500/10">
+                                    <i data-lucide="trending-up" class="w-4 h-4"></i>
+                                    <span>CALL</span>
+                                </button>
+                                <button type="button" id="btnPut" onclick="selectTradeType('PUT')"
+                                    class="flex items-center justify-center gap-1.5 rounded-xl border-2 font-black text-xs sm:text-sm transition-all cursor-pointer border-slate-700/80 bg-obsidian-950 text-slate-400 hover:text-slate-200">
+                                    <i data-lucide="trending-down" class="w-4 h-4"></i>
+                                    <span>PUT</span>
+                                </button>
                             </div>
-                            <div class="flex items-center justify-between">
-                                <span id="riskWorstDayLabel" class="text-slate-400 truncate max-w-[110px]">أسوأ يوم: —</span>
-                                <span id="riskWorstDayVal" class="font-black text-rose-400 num-font" dir="ltr">-$0.00</span>
+                            <input type="hidden" id="tradeTypeInput" value="CALL">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-12 gap-3 items-end pt-1">
+                        <div class="col-span-2 sm:col-span-2">
+                            <label class="block text-xs font-bold text-cyan-300 mb-1.5">عدد العقود</label>
+                            <div class="flex items-center h-11 bg-obsidian-950 border border-cyan-500/40 rounded-xl overflow-hidden">
+                                <button type="button" onclick="adjustContracts('contractsInput', -1)"
+                                    class="w-9 h-full flex items-center justify-center text-slate-300 hover:bg-slate-800 hover:text-white font-black text-base cursor-pointer select-none">−</button>
+                                <input type="number" id="contractsInput" inputmode="numeric" step="1" min="1" value="1" required oninput="updateLivePreview()"
+                                    class="w-full h-full bg-transparent text-center text-sm font-black text-cyan-300 num-font focus:outline-none" dir="ltr">
+                                <button type="button" onclick="adjustContracts('contractsInput', 1)"
+                                    class="w-9 h-full flex items-center justify-center text-slate-300 hover:bg-slate-800 hover:text-white font-black text-base cursor-pointer select-none">+</button>
                             </div>
                         </div>
+
+                        <div class="col-span-1 sm:col-span-2">
+                            <label class="block text-xs font-bold text-slate-300 mb-1.5">سعر الشراء ($)</label>
+                            <input type="number" id="buyPriceInput" inputmode="decimal" step="any" min="0" required placeholder="0.00" oninput="updateLivePreview()"
+                                class="w-full h-11 px-3 bg-obsidian-950 border border-slate-700/90 rounded-xl text-sm font-extrabold text-white num-font placeholder-slate-600 focus:outline-none focus:border-emerald-400" dir="ltr">
+                        </div>
+
+                        <div class="col-span-1 sm:col-span-2">
+                            <label class="block text-xs font-bold text-slate-300 mb-1.5">سعر البيع ($)</label>
+                            <input type="number" id="sellPriceInput" inputmode="decimal" step="any" min="0" required placeholder="0.00" oninput="updateLivePreview()"
+                                class="w-full h-11 px-3 bg-obsidian-950 border border-slate-700/90 rounded-xl text-sm font-extrabold text-white num-font placeholder-slate-600 focus:outline-none focus:border-emerald-400" dir="ltr">
+                        </div>
+
+                        <div class="col-span-1 sm:col-span-1">
+                            <label class="block text-xs font-bold text-slate-300 mb-1.5">العمولة</label>
+                            <input type="text" id="commissionInput" value="4.85" readonly
+                                class="w-full h-11 px-1.5 bg-obsidian-900/90 border border-amber-500/30 rounded-xl text-xs font-extrabold text-amber-300 num-font text-center cursor-not-allowed select-none" dir="ltr" title="4.85$ لكل عقد">
+                        </div>
+
+                        <div class="col-span-1 sm:col-span-2">
+                            <label class="block text-xs font-bold text-slate-300 mb-1.5">ملاحظة الصفقة</label>
+                            <input type="text" id="tradeNoteInput" placeholder="ملاحظتك..."
+                                class="w-full h-11 px-3 bg-obsidian-950 border border-slate-700/90 rounded-xl text-xs sm:text-sm font-bold text-purple-200 placeholder-slate-500 focus:outline-none focus:border-purple-400">
+                        </div>
+
+                        <div class="col-span-2 sm:col-span-3 flex items-stretch gap-2 h-11">
+                            <div id="livePreviewBox" class="flex-1 px-3 py-1 rounded-xl bg-obsidian-950 border border-slate-800 flex flex-col justify-center min-w-[95px]">
+                                <div class="flex items-center justify-between text-[10px] text-slate-400">
+                                    <span>الصافي</span>
+                                    <span id="liveTradeRoi" class="font-bold num-font" dir="ltr">0%</span>
+                                </div>
+                                <span id="livePreviewAmount" class="text-sm font-black text-slate-300 num-font truncate" dir="ltr">$0.00</span>
+                            </div>
+                            <button type="submit"
+                                class="px-5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 active:scale-95 text-obsidian-950 font-black text-xs sm:text-sm rounded-xl shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0">
+                                <i data-lucide="plus" class="w-4 h-4 stroke-[3]"></i>
+                                <span>تسجيل</span>
+                            </button>
+                        </div>
                     </div>
-                    <div class="pt-2 mt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
-                        <span class="text-slate-400">نسبة العمولات من الأرباح:</span>
-                        <span id="riskCommImpact" class="font-black text-amber-400 num-font" dir="ltr">0%</span>
+                </form>
+            </section>
+
+            <!-- 2. سجل الصفقات وتقويم الشهور والأيام -->
+            <section class="cyber-panel rounded-2xl overflow-hidden">
+                <div class="bg-obsidian-950/90 border-b border-slate-800 px-3 sm:px-5 py-4 space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-xs font-extrabold text-slate-200 flex items-center gap-1.5">
+                            <i data-lucide="calendar-days" class="w-4 h-4 text-amber-400"></i>
+                            <span>التقويم الزمني للصفقات</span>
+                        </span>
+                        <button onclick="toggleDaysViewMode()" id="daysViewToggleBtn" class="hidden text-[11px] font-bold px-2.5 py-1 rounded-lg bg-obsidian-800 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer">
+                            عرض كل الأيام
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5" id="monthsTabsContainer"></div>
+                    <div id="daysTabsWrapper" class="pt-2.5 border-t border-slate-800/80"></div>
+                </div>
+
+                <div class="p-4 sm:p-5 border-b border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="p-2 rounded-xl bg-cyan-500/15 border border-cyan-500/25 text-cyan-400 shrink-0">
+                            <i data-lucide="list-ordered" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="text-sm sm:text-lg font-black text-white" id="tableMonthTitle">سجل الصفقات</h3>
+                                <span id="monthNetSummaryBadge" class="text-xs font-black px-2.5 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 num-font" dir="ltr">+$0.00</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-0.5">شامل عدد العقود وتفاصيل الدخول والخروج وإمكانية التعديل وصافي الربح بعد خصم العمولة ($4.85 لكل عقد)</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <select id="symbolFilterSelect" onchange="setSymbolFilter(this.value)"
+                            class="px-3 py-2 bg-obsidian-950 border border-slate-800 rounded-xl text-xs font-bold text-cyan-300 focus:outline-none cursor-pointer">
+                            <option value="ALL">كل الشركات (الكل)</option>
+                            <option value="SPX">SPX فقط</option>
+                            <option value="SPY">SPY فقط</option>
+                            <option value="NDX">NDX فقط</option>
+                            <option value="TSLA">TSLA (تسلا)</option>
+                            <option value="NVDA">NVDA (إنفيديا)</option>
+                        </select>
+
+                        <div class="grid grid-cols-5 sm:flex sm:items-center gap-1 bg-obsidian-950 p-1 rounded-xl border border-slate-800 text-[11px] font-bold">
+                            <button onclick="setFilter('ALL')" id="filter-ALL" class="filter-btn py-1.5 px-2.5 rounded-lg bg-cyan-600 text-white cursor-pointer">الكل</button>
+                            <button onclick="setFilter('CALL')" id="filter-CALL" class="filter-btn py-1.5 px-2.5 rounded-lg text-slate-400 hover:text-emerald-300 cursor-pointer">CALL</button>
+                            <button onclick="setFilter('PUT')" id="filter-PUT" class="filter-btn py-1.5 px-2.5 rounded-lg text-slate-400 hover:text-rose-300 cursor-pointer">PUT</button>
+                            <button onclick="setFilter('WIN')" id="filter-WIN" class="filter-btn py-1.5 px-2.5 rounded-lg text-slate-400 hover:text-emerald-300 cursor-pointer">رابحة</button>
+                            <button onclick="setFilter('LOSS')" id="filter-LOSS" class="filter-btn py-1.5 px-2.5 rounded-lg text-slate-400 hover:text-rose-300 cursor-pointer">خاسرة</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
-    </main>
 
-    <!-- ===================================================================== -->
-    <!-- الصفحة الثانية: مركز الأخبار والاختصارات والشروحات (صور + روابط PDF)   -->
-    <!-- ===================================================================== -->
-    <main id="page-resources" class="hidden max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-5 space-y-6">
-
-        <!-- ترويسة الصفحة الجديدة -->
-        <section class="cyber-panel-gold rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div class="flex items-center gap-3.5">
-                <div class="p-3 rounded-2xl bg-amber-500/15 border border-amber-400/30 text-amber-400 shrink-0">
-                    <i data-lucide="compass" class="w-6 h-6"></i>
+                <!-- بطاقات الجوال -->
+                <div id="mobileTradesContainer" class="md:hidden divide-y divide-slate-800/70"></div>
+                <div id="mobileSummaryFooter" class="md:hidden bg-obsidian-950 border-t-2 border-amber-500/30 p-4 space-y-2 text-xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-amber-400 font-extrabold" id="mobileFootLabel">مجموع الفترة:</span>
+                        <span id="mobileFootCount" class="bg-amber-500/15 text-amber-300 px-2.5 py-0.5 rounded-lg font-bold">0 صفقات</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800/80 text-center num-font">
+                        <div><span class="text-slate-400 block text-[10px] font-sans">إجمالي الشراء</span><span id="mobileFootBuy" class="font-bold text-slate-200" dir="ltr">$0.00</span></div>
+                        <div><span class="text-slate-400 block text-[10px] font-sans">إجمالي البيع</span><span id="mobileFootSell" class="font-bold text-slate-200" dir="ltr">$0.00</span></div>
+                        <div><span class="text-slate-400 block text-[10px] font-sans">الصافي</span><span id="mobileFootNet" class="font-black text-emerald-400" dir="ltr">+$0.00</span></div>
+                    </div>
                 </div>
-                <div>
-                    <h2 class="text-base sm:text-xl font-black text-white">مركز الأخبار والشروحات والملفات</h2>
-                    <p class="text-xs text-slate-400 mt-0.5">اختصارات مواقع الأخبار + مكتبة الصور وروابط ملفات PDF التعليمية (Google Drive وغيرها)</p>
+
+                <!-- جدول الكمبيوتر -->
+                <div class="hidden md:block overflow-x-auto">
+                    <table class="w-full text-right border-collapse">
+                        <thead>
+                            <tr class="bg-obsidian-950/90 border-b border-slate-800 text-[11px] font-extrabold text-slate-400 uppercase">
+                                <th class="py-3.5 px-3 text-center">#</th>
+                                <th class="py-3.5 px-3">المؤشر</th>
+                                <th class="py-3.5 px-3">التاريخ</th>
+                                <th class="py-3.5 px-3">النوع</th>
+                                <th class="py-3.5 px-3 text-center">العقود</th>
+                                <th class="py-3.5 px-3">الملاحظة</th>
+                                <th class="py-3.5 px-3">الشراء</th>
+                                <th class="py-3.5 px-3">البيع</th>
+                                <th class="py-3.5 px-3">العمولة</th>
+                                <th class="py-3.5 px-3">صافي الربح</th>
+                                <th class="py-3.5 px-3 text-center">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tradesTableBody" class="divide-y divide-slate-800/60 text-xs sm:text-sm"></tbody>
+                        <tfoot id="tradesTableFoot" class="bg-obsidian-950 border-t-2 border-amber-500/30 text-xs sm:text-sm font-bold">
+                            <tr>
+                                <td colspan="4" class="py-4 px-4">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-amber-400 font-extrabold" id="footSummaryLabel">مجموع الفترة:</span>
+                                        <span id="footTradeCount" class="bg-amber-500/15 text-amber-300 text-xs px-2.5 py-0.5 rounded-lg">0 صفقات</span>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-3 text-center text-cyan-300 font-black num-font" id="footTotalContracts">0</td>
+                                <td class="py-4 px-3 text-slate-500 text-xs">—</td>
+                                <td class="py-4 px-3 text-slate-300 num-font" id="footTotalBuy" dir="ltr">$0.00</td>
+                                <td class="py-4 px-3 text-slate-300 num-font" id="footTotalSell" dir="ltr">$0.00</td>
+                                <td class="py-4 px-3 text-amber-400 num-font" id="footTotalComm" dir="ltr">-$0.00</td>
+                                <td class="py-4 px-3 text-base font-black num-font" id="footTotalNet" dir="ltr">$0.00</td>
+                                <td class="py-4 px-3 text-center text-xs text-slate-500">الإجمالي</td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
-            </div>
-            <div class="flex items-center gap-2 flex-wrap">
-                <button onclick="openAddShortcutModal()"
-                    class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-400/35 text-xs font-black transition-all cursor-pointer">
-                    <i data-lucide="link" class="w-4 h-4"></i>
-                    <span>+ إضافة موقع</span>
-                </button>
-                <button onclick="openAddGuideModal()"
-                    class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-obsidian-950 text-xs font-black shadow-lg shadow-amber-500/20 transition-all cursor-pointer">
-                    <i data-lucide="file-plus-2" class="w-4 h-4"></i>
-                    <span>+ إضافة شرح / PDF / صورة</span>
-                </button>
-            </div>
-        </section>
 
-        <!-- القسم 1: اختصارات مواقع الأخبار والأسواق -->
-        <section class="cyber-panel rounded-2xl p-4 sm:p-5 space-y-4">
-            <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-800/80">
-                <div class="flex items-center gap-2">
-                    <span class="p-1.5 rounded-lg bg-cyan-500/15 text-cyan-400"><i data-lucide="globe" class="w-4 h-4"></i></span>
-                    <h3 class="text-sm sm:text-base font-black text-white">اختصارات مواقع الأخبار والأسواق</h3>
+                <div id="emptyTableState" class="hidden py-12 px-4 text-center">
+                    <div class="w-12 h-12 rounded-2xl bg-obsidian-800 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                        <i data-lucide="radar" class="w-6 h-6"></i>
+                    </div>
+                    <h4 class="text-sm font-bold text-slate-300">لا توجد صفقات في هذا النطاق</h4>
+                    <p class="text-xs text-slate-500 mt-1">سجّل صفقتك القادمة من لوحة التنفيذ أعلاه.</p>
                 </div>
-                <span id="shortcutsCountBadge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-obsidian-900 border border-slate-800 text-slate-400 num-font">0 مواقع</span>
-            </div>
+            </section>
+        </main>
 
-            <div id="newsShortcutsGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"></div>
-        </section>
+        <!-- ===================================================================== -->
+        <!-- الصفحة الثانية: المحفظة والأداء (رأس المال، التقويم، الملخص، الرسوم)  -->
+        <!-- ===================================================================== -->
+        <main id="page-portfolio" class="hidden max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-5 space-y-6">
 
-        <!-- القسم 2: معرض الصور وملفات PDF والشروحات التعليمية -->
-        <section class="cyber-panel rounded-2xl p-4 sm:p-5 space-y-4">
-            <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-800/80">
-                <div class="flex items-center gap-2">
-                    <span class="p-1.5 rounded-lg bg-amber-500/15 text-amber-400"><i data-lucide="book-open" class="w-4 h-4"></i></span>
+            <!-- 1. لوحة المؤشرات التنفيذية ورأس المال -->
+            <section class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+                <div class="cyber-panel rounded-2xl p-4 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-bold text-slate-400">رأس المال الأساسي</span>
+                        <i data-lucide="wallet" class="w-4 h-4 text-cyan-400"></i>
+                    </div>
+                    <div class="relative flex items-center mt-1">
+                        <span class="text-base font-black text-amber-400 ml-1 num-font">$</span>
+                        <input type="number" id="initialCapitalInput" inputmode="decimal" min="0" step="100" value="25000"
+                            onchange="handleCapitalChange(this.value)" oninput="handleCapitalChange(this.value)"
+                            class="w-full bg-obsidian-950/90 border border-slate-700/80 focus:border-amber-400 rounded-xl px-2.5 py-1.5 text-base sm:text-lg font-extrabold text-white num-font outline-none transition-all" dir="ltr">
+                    </div>
+                    <div class="text-[10px] text-slate-500 mt-1.5 font-semibold">قابل للتعديل الفوري</div>
+                </div>
+
+                <div class="cyber-panel-gold rounded-2xl p-4 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-extrabold text-amber-300">الرصيد الإجمالي</span>
+                        <i data-lucide="landmark" class="w-4 h-4 text-amber-400"></i>
+                    </div>
+                    <div id="kpiCurrentBalance" class="text-lg sm:text-2xl font-black text-white num-font tracking-tight mt-1 truncate" dir="ltr">$25,000.00</div>
+                    <div class="flex items-center justify-between mt-2 text-[10px]">
+                        <span class="text-slate-400">النمو الكلي:</span>
+                        <span id="kpiRoiBadge" class="font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 num-font" dir="ltr">+0.00%</span>
+                    </div>
+                </div>
+
+                <div class="cyber-panel rounded-2xl p-4 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-bold text-slate-400">صافي الربح / الخسارة</span>
+                        <div id="kpiNetIconBox" class="text-emerald-400"><i data-lucide="trending-up" class="w-4 h-4"></i></div>
+                    </div>
+                    <div id="kpiNetProfit" class="text-lg sm:text-2xl font-black text-emerald-400 num-font tracking-tight mt-1 truncate" dir="ltr">+$0.00</div>
+                    <div class="flex items-center justify-between mt-2 text-[10px] text-slate-400">
+                        <span>العمولات:</span>
+                        <span id="kpiTotalComm" class="text-amber-400 font-bold num-font" dir="ltr">-$0.00</span>
+                    </div>
+                </div>
+
+                <div class="cyber-panel rounded-2xl p-4 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-bold text-slate-400">دقة الصفقات (Win Rate)</span>
+                        <i data-lucide="crosshair" class="w-4 h-4 text-purple-400"></i>
+                    </div>
+                    <div class="flex items-baseline gap-2 mt-1">
+                        <span id="kpiWinRate" class="text-lg sm:text-2xl font-black text-white num-font">0%</span>
+                        <span id="kpiWinLossCount" class="text-[11px] font-bold text-slate-400 num-font" dir="ltr">(0W / 0L)</span>
+                    </div>
+                    <div class="w-full bg-obsidian-950 h-1.5 rounded-full mt-2.5 overflow-hidden border border-slate-800">
+                        <div id="kpiWinRateBar" class="bg-gradient-to-r from-emerald-500 to-cyan-400 h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="col-span-2 lg:col-span-1 cyber-panel rounded-2xl p-4 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-bold text-slate-400">أقوى صفقة محققة</span>
+                        <i data-lucide="flame" class="w-4 h-4 text-orange-400"></i>
+                    </div>
+                    <div id="kpiBestTrade" class="text-lg sm:text-xl font-black text-amber-300 num-font mt-1 truncate" dir="ltr">+$0.00</div>
+                    <div id="kpiBestTradeMeta" class="text-[10px] text-slate-400 mt-2 font-semibold truncate">بانتظار تسجيل الصفقات</div>
+                </div>
+            </section>
+
+            <!-- 2. شريط هدف المحفظة الذكي + شريط أداء الشركات -->
+            <section class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                <div class="lg:col-span-5 cyber-panel rounded-2xl p-4 flex flex-col justify-between">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="p-1.5 rounded-lg bg-amber-500/15 text-amber-400"><i data-lucide="trophy" class="w-4 h-4"></i></span>
+                            <div>
+                                <h3 class="text-xs sm:text-sm font-extrabold text-white">الهدف المستهدف للمحفظة</h3>
+                                <p class="text-[10px] text-slate-400" id="goalSubtitleText">اضغط "الأهداف" لتحديد هدفك المالي</p>
+                            </div>
+                        </div>
+                        <span id="goalPercentBadge" class="text-xs font-black px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-400/30 num-font">0%</span>
+                    </div>
+                    <div class="space-y-1.5 mt-2">
+                        <div class="w-full h-2.5 bg-obsidian-950 rounded-full overflow-hidden border border-slate-800 p-0.5">
+                            <div id="goalProgressBar" class="h-full rounded-full bg-gradient-to-r from-amber-500 via-yellow-400 to-emerald-400 transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-[11px] font-bold num-font text-slate-400" dir="ltr">
+                            <span id="goalCurrentLabel">$25,000</span>
+                            <span id="goalTargetLabel" class="text-amber-300">Target: $50,000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-7 cyber-panel rounded-2xl p-4">
+                    <div class="flex items-center justify-between mb-2.5">
+                        <span class="text-xs font-extrabold text-slate-300 flex items-center gap-1.5">
+                            <i data-lucide="bar-chart-3" class="w-4 h-4 text-cyan-400"></i>
+                            <span>أداء المؤشرات والشركات (اضغط للتصفية في السجل)</span>
+                        </span>
+                        <button onclick="setSymbolFilter('ALL')" class="text-[11px] font-bold text-cyan-400 hover:text-cyan-300 cursor-pointer">عرض الكل</button>
+                    </div>
+                    <div id="tickerScoreboard" class="grid grid-cols-2 sm:grid-cols-5 gap-2"></div>
+                </div>
+            </section>
+
+            <!-- 3. التقويم الزمني للصفقات (في صفحة المحفظة والأداء) -->
+            <section class="cyber-panel rounded-2xl overflow-hidden border-cyan-500/20">
+                <div class="bg-obsidian-950/90 px-3 sm:px-5 py-4 space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-xs font-extrabold text-slate-200 flex items-center gap-1.5">
+                            <i data-lucide="calendar-days" class="w-4 h-4 text-amber-400"></i>
+                            <span>التقويم الزمني للصفقات</span>
+                        </span>
+                        <button onclick="toggleDaysViewMode()" id="portfolioDaysViewToggleBtn" class="hidden text-[11px] font-bold px-2.5 py-1 rounded-lg bg-obsidian-800 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer">
+                            عرض كل الأيام
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5" id="portfolioMonthsTabsContainer"></div>
+                    <div id="portfolioDaysTabsWrapper" class="pt-2.5 border-t border-slate-800/80"></div>
+                </div>
+            </section>
+
+            <!-- 4. ملخص الأداء اليومي المنفصل (مع عدد الصفقات الناجحة والخاسرة) -->
+            <section class="cyber-panel rounded-2xl p-4 sm:p-5 border-amber-500/25 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
+                    <div class="flex items-center gap-2.5">
+                        <div class="p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 shrink-0">
+                            <i data-lucide="calendar-range" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="text-sm sm:text-base font-black text-white">الملخص اليومي المنفصل</h3>
+                                <span id="dailySummaryPeriodBadge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-cyan-500/10 text-cyan-300 border border-cyan-500/25">نوفمبر 2026</span>
+                                <button id="resetDayFilterSummaryBtn" onclick="selectDayTab('ALL')" class="hidden text-[11px] font-extrabold px-2.5 py-0.5 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-400/30 hover:bg-amber-500/25 transition-all cursor-pointer">
+                                    عرض ملخص كل الأيام
+                                </button>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-0.5">بطاقة مستقلة لكل يوم تعرض المكسب بالدولار والريال، وعدد الصفقات الناجحة والخاسرة ونوعها</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 bg-obsidian-950/90 px-3 py-1.5 rounded-xl border border-slate-800">
+                        <span class="text-[11px] font-bold text-slate-400">سعر الصرف:</span>
+                        <span class="text-xs font-extrabold text-amber-300 num-font" dir="ltr">1$ =</span>
+                        <input type="number" id="sarRateInput" inputmode="decimal" step="0.01" min="0.1" value="3.75"
+                            onchange="handleSarRateChange(this.value)" oninput="handleSarRateChange(this.value)"
+                            class="w-14 bg-obsidian-900 border border-slate-700 focus:border-amber-400 rounded-lg px-1.5 py-0.5 text-xs font-black text-emerald-300 text-center num-font outline-none" dir="ltr">
+                        <span class="text-[11px] font-extrabold text-emerald-400">ريال</span>
+                    </div>
+                </div>
+
+                <div id="dailyBreakdownGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+
+                <div id="emptyDailyBreakdown" class="hidden py-8 text-center">
+                    <p class="text-xs font-bold text-slate-500">لا توجد أيام تداول مسجلة لعرض ملخصها في هذه الفترة.</p>
+                </div>
+            </section>
+
+            <!-- 5. قسم التحليلات والرسوم البيانية المتقدمة -->
+            <section class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
+                <div class="lg:col-span-8 cyber-panel rounded-2xl p-4 sm:p-5 flex flex-col justify-between">
+                    <div class="flex items-center justify-between gap-2 mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="p-1.5 rounded-lg bg-cyan-500/15 text-cyan-400"><i data-lucide="line-chart" class="w-4 h-4"></i></span>
+                            <h3 class="text-sm sm:text-base font-extrabold text-white">منحنى نمو المحفظة (Equity Curve)</h3>
+                        </div>
+                        <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">تراكمي لحظي</span>
+                    </div>
+                    <div class="relative w-full h-56 sm:h-64">
+                        <canvas id="equityChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-4 cyber-panel rounded-2xl p-4 sm:p-5 flex flex-col justify-between">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="p-1.5 rounded-lg bg-purple-500/15 text-purple-400"><i data-lucide="pie-chart" class="w-4 h-4"></i></span>
+                        <h3 class="text-sm sm:text-base font-extrabold text-white">توازن العقود (CALL vs PUT)</h3>
+                    </div>
+                    <div class="relative w-full h-44 flex items-center justify-center">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2.5 mt-3 pt-3 border-t border-slate-800/80 text-xs">
+                        <div class="bg-obsidian-950/90 p-2.5 rounded-xl border border-emerald-500/25">
+                            <div class="flex items-center justify-between text-slate-400 mb-1">
+                                <span>صفقات CALL</span>
+                                <span id="callCountBadge" class="font-black text-emerald-400 num-font">0</span>
+                            </div>
+                            <div id="callNetText" class="font-black text-emerald-300 text-sm num-font" dir="ltr">$0.00</div>
+                        </div>
+                        <div class="bg-obsidian-950/90 p-2.5 rounded-xl border border-rose-500/25">
+                            <div class="flex items-center justify-between text-slate-400 mb-1">
+                                <span>صفقات PUT</span>
+                                <span id="putCountBadge" class="font-black text-rose-400 num-font">0</span>
+                            </div>
+                            <div id="putNetText" class="font-black text-rose-300 text-sm num-font" dir="ltr">$0.00</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6. ملخص الأداء المتقدم وإدارة المخاطر -->
+            <section class="cyber-panel-gold rounded-2xl p-4 sm:p-5 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-800/80">
+                    <div class="flex items-center gap-2.5">
+                        <div class="p-2 rounded-xl bg-amber-500/15 border border-amber-400/30 text-amber-400">
+                            <i data-lucide="shield-check" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm sm:text-base font-black text-white">ملخص الأداء المتقدم وإدارة المخاطر</h3>
+                            <p class="text-[11px] text-slate-400">مؤشرات جودة التداول والانضباط المالي المحسوبة تلقائياً من جميع صفقاتك</p>
+                        </div>
+                    </div>
+                    <span id="riskTotalContractsBadge" class="text-xs font-extrabold px-3 py-1 rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 num-font">إجمالي العقود المتداولة: 0</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                    <div class="bg-obsidian-950/90 border border-slate-800/90 rounded-2xl p-4 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-extrabold text-slate-300">معامل الربحية (Profit Factor)</span>
+                                <span id="riskPfStatusBadge" class="text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-800 text-slate-400">بانتظار البيانات</span>
+                            </div>
+                            <div id="riskProfitFactor" class="text-2xl font-black text-amber-300 num-font my-1" dir="ltr">0.00</div>
+                        </div>
+                        <div class="pt-2.5 mt-2 border-t border-slate-800/80 space-y-1 text-[11px]">
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">إجمالي أرباح الرابحة:</span>
+                                <span id="riskGrossWin" class="font-bold text-emerald-400 num-font" dir="ltr">+$0.00</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">إجمالي خسائر الخاسرة:</span>
+                                <span id="riskGrossLoss" class="font-bold text-rose-400 num-font" dir="ltr">-$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-obsidian-950/90 border border-slate-800/90 rounded-2xl p-4 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-extrabold text-slate-300">متوسط الربح vs الخسارة</span>
+                                <i data-lucide="scale" class="w-4 h-4 text-cyan-400"></i>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 my-1.5">
+                                <div class="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                                    <span class="text-[10px] text-slate-400 block">متوسط الربح</span>
+                                    <span id="riskAvgWin" class="text-sm font-black text-emerald-400 num-font" dir="ltr">+$0.00</span>
+                                </div>
+                                <div class="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                                    <span class="text-[10px] text-slate-400 block">متوسط الخسارة</span>
+                                    <span id="riskAvgLoss" class="text-sm font-black text-rose-400 num-font" dir="ltr">-$0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pt-2 mt-1 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
+                            <span class="text-slate-400">نسبة العائد للمخاطرة (R:R):</span>
+                            <span id="riskRewardRatio" class="font-black text-cyan-300 num-font" dir="ltr">0.00 : 1</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-obsidian-950/90 border border-slate-800/90 rounded-2xl p-4 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-extrabold text-slate-300">أقسى تراجع (Max Drawdown)</span>
+                                <i data-lucide="trending-down" class="w-4 h-4 text-rose-400"></i>
+                            </div>
+                            <div class="flex items-baseline gap-2 my-1">
+                                <span id="riskMaxDrawdown" class="text-xl font-black text-rose-400 num-font" dir="ltr">-$0.00</span>
+                                <span id="riskMaxDrawdownPct" class="text-xs font-bold text-slate-400 num-font" dir="ltr">(0.0%)</span>
+                            </div>
+                        </div>
+                        <div class="pt-2.5 mt-2 border-t border-slate-800/80 grid grid-cols-2 gap-2 text-[11px]">
+                            <div class="flex items-center justify-between bg-obsidian-900 px-2 py-1 rounded-lg">
+                                <span class="text-slate-400">سلسلة ربح:</span>
+                                <span id="riskWinStreak" class="font-black text-emerald-400 num-font">0</span>
+                            </div>
+                            <div class="flex items-center justify-between bg-obsidian-900 px-2 py-1 rounded-lg">
+                                <span class="text-slate-400">سلسلة خسارة:</span>
+                                <span id="riskLossStreak" class="font-black text-rose-400 num-font">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-obsidian-950/90 border border-slate-800/90 rounded-2xl p-4 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-extrabold text-slate-300">أفضل يوم vs أسوأ يوم</span>
+                                <i data-lucide="calendar-check" class="w-4 h-4 text-amber-400"></i>
+                            </div>
+                            <div class="space-y-1.5 my-1 text-xs">
+                                <div class="flex items-center justify-between">
+                                    <span id="riskBestDayLabel" class="text-slate-400 truncate max-w-[110px]">أفضل يوم: —</span>
+                                    <span id="riskBestDayVal" class="font-black text-emerald-400 num-font" dir="ltr">+$0.00</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span id="riskWorstDayLabel" class="text-slate-400 truncate max-w-[110px]">أسوأ يوم: —</span>
+                                    <span id="riskWorstDayVal" class="font-black text-rose-400 num-font" dir="ltr">-$0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pt-2 mt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
+                            <span class="text-slate-400">نسبة العمولات من الأرباح:</span>
+                            <span id="riskCommImpact" class="font-black text-amber-400 num-font" dir="ltr">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- ===================================================================== -->
+        <!-- الصفحة الثالثة: مركز الأخبار والاختصارات والشروحات (صور + روابط PDF)   -->
+        <!-- ===================================================================== -->
+        <main id="page-resources" class="hidden max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-5 space-y-6">
+
+            <!-- ترويسة الصفحة -->
+            <section class="cyber-panel-gold rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-3.5">
+                    <div class="p-3 rounded-2xl bg-amber-500/15 border border-amber-400/30 text-amber-400 shrink-0">
+                        <i data-lucide="compass" class="w-6 h-6"></i>
+                    </div>
                     <div>
-                        <h3 class="text-sm sm:text-base font-black text-white">الشروحات والصور وملفات PDF</h3>
-                        <p class="text-[11px] text-slate-400">اضغط على أي صورة لتكبيرها أو على ملف PDF لقراءته مباشرة داخل الموقع</p>
+                        <h2 class="text-base sm:text-xl font-black text-white">مركز الأخبار والشروحات والملفات</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">اختصارات مواقع الأخبار + مكتبة الصور وروابط ملفات PDF التعليمية (Google Drive وغيرها)</p>
                     </div>
                 </div>
-                <span id="guidesCountBadge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-obsidian-900 border border-slate-800 text-slate-400 num-font">0 عناصر</span>
-            </div>
-
-            <div id="guidesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-
-            <div id="emptyGuidesState" class="hidden py-10 text-center">
-                <div class="w-12 h-12 rounded-2xl bg-obsidian-800 text-slate-400 flex items-center justify-center mx-auto mb-3">
-                    <i data-lucide="folder-open" class="w-6 h-6"></i>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <button onclick="openAddShortcutModal()"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-400/35 text-xs font-black transition-all cursor-pointer">
+                        <i data-lucide="link" class="w-4 h-4"></i>
+                        <span>+ إضافة موقع</span>
+                    </button>
+                    <button onclick="openAddGuideModal()"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-obsidian-950 text-xs font-black shadow-lg shadow-amber-500/20 transition-all cursor-pointer">
+                        <i data-lucide="file-plus-2" class="w-4 h-4"></i>
+                        <span>+ إضافة شرح / PDF / صورة</span>
+                    </button>
                 </div>
-                <h4 class="text-sm font-bold text-slate-300">لا توجد شروحات أو ملفات مضافة بعد</h4>
-                <p class="text-xs text-slate-500 mt-1">اضغط على زر "+ إضافة شرح / PDF / صورة" بالأعلى لإضافة روابط PDF أو شارتاتك التعليمية.</p>
-            </div>
-        </section>
-    </main>
+            </section>
+
+            <!-- القسم 1: اختصارات مواقع الأخبار والأسواق -->
+            <section class="cyber-panel rounded-2xl p-4 sm:p-5 space-y-4">
+                <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-800/80">
+                    <div class="flex items-center gap-2">
+                        <span class="p-1.5 rounded-lg bg-cyan-500/15 text-cyan-400"><i data-lucide="globe" class="w-4 h-4"></i></span>
+                        <h3 class="text-sm sm:text-base font-black text-white">اختصارات مواقع الأخبار والأسواق</h3>
+                    </div>
+                    <span id="shortcutsCountBadge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-obsidian-900 border border-slate-800 text-slate-400 num-font">0 مواقع</span>
+                </div>
+
+                <div id="newsShortcutsGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"></div>
+            </section>
+
+            <!-- القسم 2: معرض الصور وملفات PDF والشروحات التعليمية -->
+            <section class="cyber-panel rounded-2xl p-4 sm:p-5 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-800/80">
+                    <div class="flex items-center gap-2">
+                        <span class="p-1.5 rounded-lg bg-amber-500/15 text-amber-400"><i data-lucide="book-open" class="w-4 h-4"></i></span>
+                        <div>
+                            <h3 class="text-sm sm:text-base font-black text-white">الشروحات والصور وملفات PDF</h3>
+                            <p class="text-[11px] text-slate-400">اضغط على أي صورة لتكبيرها أو على ملف PDF لقراءته مباشرة داخل الموقع</p>
+                        </div>
+                    </div>
+                    <span id="guidesCountBadge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-obsidian-900 border border-slate-800 text-slate-400 num-font">0 عناصر</span>
+                </div>
+
+                <div id="guidesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+                <div id="emptyGuidesState" class="hidden py-10 text-center">
+                    <div class="w-12 h-12 rounded-2xl bg-obsidian-800 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                        <i data-lucide="folder-open" class="w-6 h-6"></i>
+                    </div>
+                    <h4 class="text-sm font-bold text-slate-300">لا توجد شروحات أو ملفات مضافة بعد</h4>
+                    <p class="text-xs text-slate-500 mt-1">اضغط على زر "+ إضافة شرح / PDF / صورة" بالأعلى لإضافة روابط PDF أو شارتاتك التعليمية.</p>
+                </div>
+            </section>
+        </main>
+
+    </div>
 
     <!-- ===================================================================== -->
     <!-- النوافذ المنبثقة (Modals)                                             -->
@@ -811,7 +915,6 @@
                         class="w-full h-11 px-3.5 bg-obsidian-950 border border-slate-700 rounded-xl text-sm font-bold text-white focus:outline-none focus:border-amber-400">
                 </div>
 
-                <!-- اختيار نوع المرفق: رابط PDF أو صورة -->
                 <div>
                     <label class="block text-xs font-bold text-slate-300 mb-1.5">نوع المرفق</label>
                     <div class="grid grid-cols-2 gap-2 h-11">
@@ -829,7 +932,6 @@
                     <input type="hidden" id="guideMediaTypeInput" value="pdf">
                 </div>
 
-                <!-- حقول رابط الـ PDF -->
                 <div id="pdfFieldsBox" class="space-y-2">
                     <label class="block text-xs font-bold text-rose-300">رابط ملف الـ PDF المباشر (مثل رابط Google Drive)</label>
                     <input type="url" id="guidePdfUrlInput" placeholder="https://drive.google.com/file/d/..." dir="ltr"
@@ -837,7 +939,6 @@
                     <p class="text-[11px] text-slate-400">ملاحظة: في Google Drive اجعل صلاحية الرابط "أي شخص لديه الرابط" ليُفتح مباشرة داخل الموقع.</p>
                 </div>
 
-                <!-- حقول الصورة (مخفية افتراضياً وتظهر عند اختيار صورة) -->
                 <div id="imageFieldsBox" class="hidden space-y-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1.5">اختر صورة من جهازك (اختياري)</label>
@@ -1143,6 +1244,100 @@
     </script>
 
     <script>
+        // --- إعدادات الحماية وتسجيل الدخول وتذكر المتصفح لمدة أسبوع ---
+        const AUTH_USERNAME = 'kaboom';
+        const AUTH_PASSWORD = '123456789';
+        const AUTH_SESSION_KEY = 'm7md_alhawiti_auth_session_v1';
+        const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+        function checkAuthSession() {
+            try {
+                const rawSession = localStorage.getItem(AUTH_SESSION_KEY);
+                if (rawSession) {
+                    const session = JSON.parse(rawSession);
+                    if (session && session.user === AUTH_USERNAME && session.expiresAt > Date.now()) {
+                        unlockAppScreen();
+                        return true;
+                    } else {
+                        localStorage.removeItem(AUTH_SESSION_KEY);
+                    }
+                }
+                const tempSession = sessionStorage.getItem(AUTH_SESSION_KEY);
+                if (tempSession === AUTH_USERNAME) {
+                    unlockAppScreen();
+                    return true;
+                }
+            } catch (e) {}
+            lockAppScreen();
+            return false;
+        }
+
+        function unlockAppScreen() {
+            document.getElementById('loginGateScreen').classList.add('hidden');
+            document.getElementById('protectedAppWrapper').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function lockAppScreen() {
+            document.getElementById('protectedAppWrapper').classList.add('hidden');
+            document.getElementById('loginGateScreen').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        window.toggleLoginPasswordVisibility = function() {
+            const passInput = document.getElementById('loginPasswordInput');
+            const eyeIcon = document.getElementById('loginEyeIcon');
+            if (!passInput || !eyeIcon) return;
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                eyeIcon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                passInput.type = 'password';
+                eyeIcon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        };
+
+        window.handleLoginSubmit = function(event) {
+            event.preventDefault();
+            const userVal = document.getElementById('loginUsernameInput').value.trim();
+            const passVal = document.getElementById('loginPasswordInput').value;
+            const rememberWeek = document.getElementById('rememberWeekCheckbox').checked;
+            const errorBox = document.getElementById('loginErrorBox');
+            const cardBox = document.getElementById('loginCardBox');
+
+            if (userVal === AUTH_USERNAME && passVal === AUTH_PASSWORD) {
+                errorBox.classList.add('hidden');
+                if (rememberWeek) {
+                    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({
+                        user: AUTH_USERNAME,
+                        expiresAt: Date.now() + ONE_WEEK_MS
+                    }));
+                } else {
+                    sessionStorage.setItem(AUTH_SESSION_KEY, AUTH_USERNAME);
+                }
+                document.getElementById('loginPasswordInput').value = '';
+                unlockAppScreen();
+                renderAll();
+                showToast(rememberWeek ? 'تم تسجيل الدخول وتذكر المتصفح لمدة أسبوع 🔓' : 'تم تسجيل الدخول بنجاح 🔓');
+            } else {
+                errorBox.classList.remove('hidden');
+                cardBox.classList.remove('animate-shake');
+                void cardBox.offsetWidth;
+                cardBox.classList.add('animate-shake');
+            }
+        };
+
+        window.handleLogout = function() {
+            localStorage.removeItem(AUTH_SESSION_KEY);
+            sessionStorage.removeItem(AUTH_SESSION_KEY);
+            document.getElementById('loginUsernameInput').value = '';
+            document.getElementById('loginPasswordInput').value = '';
+            document.getElementById('loginErrorBox').classList.add('hidden');
+            lockAppScreen();
+        };
+
+        // --- بقية متغيرات ودوال التطبيق ---
         const COMMISSION_PER_CONTRACT = 4.85;
         const LOCAL_STORAGE_KEY = 'm7md_alhawiti_options_v1';
         const LEGACY_KEYS = ['apex_options_portfolio_v3', 'options_portfolio_tracker_v2'];
@@ -1212,29 +1407,45 @@
         let distributionChartInstance = null;
         let pendingUploadedImageBase64 = '';
 
-        // --- التنقل بين الصفحات ---
+        // --- التنقل بين الصفحات الثلاث ---
         window.switchPage = function(pageName) {
             activePage = pageName;
             const tradesPage = document.getElementById('page-trades');
+            const portfolioPage = document.getElementById('page-portfolio');
             const resourcesPage = document.getElementById('page-resources');
-            const headerActions = document.getElementById('tradesHeaderActions');
+
             const btnTrades = document.getElementById('nav-btn-trades');
+            const btnPortfolio = document.getElementById('nav-btn-portfolio');
             const btnResources = document.getElementById('nav-btn-resources');
+
+            tradesPage.classList.add('hidden');
+            portfolioPage.classList.add('hidden');
+            resourcesPage.classList.add('hidden');
+
+            const inactiveClass = 'flex-1 lg:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer text-slate-300 hover:text-white hover:bg-obsidian-800';
+            btnTrades.className = inactiveClass;
+            btnPortfolio.className = inactiveClass;
+            btnResources.className = inactiveClass;
 
             if (pageName === 'trades') {
                 tradesPage.classList.remove('hidden');
-                resourcesPage.classList.add('hidden');
-                headerActions.classList.remove('hidden');
-                btnTrades.className = 'flex-1 lg:flex-initial flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer bg-gradient-to-r from-amber-500 to-orange-500 text-obsidian-950 shadow-lg shadow-amber-500/20';
-                btnResources.className = 'flex-1 lg:flex-initial flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer text-slate-300 hover:text-white hover:bg-obsidian-800';
-            } else {
-                tradesPage.classList.add('hidden');
+                btnTrades.className = 'flex-1 lg:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer bg-gradient-to-r from-amber-500 to-orange-500 text-obsidian-950 shadow-lg shadow-amber-500/20';
+            } else if (pageName === 'portfolio') {
+                portfolioPage.classList.remove('hidden');
+                btnPortfolio.className = 'flex-1 lg:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer bg-gradient-to-r from-emerald-500 to-teal-600 text-obsidian-950 shadow-lg shadow-emerald-500/20';
+                renderTickerScoreboard();
+                renderMonthTabs();
+                renderDayTabs();
+                renderKPIs();
+                renderDailyBreakdown();
+                renderCharts();
+                renderRiskSummary();
+            } else if (pageName === 'resources') {
                 resourcesPage.classList.remove('hidden');
-                headerActions.classList.add('hidden');
-                btnResources.className = 'flex-1 lg:flex-initial flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20';
-                btnTrades.className = 'flex-1 lg:flex-initial flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer text-slate-300 hover:text-white hover:bg-obsidian-800';
+                btnResources.className = 'flex-1 lg:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20';
                 renderResourcesPage();
             }
+
             window.scrollTo({ top: 0, behavior: 'smooth' });
             lucide.createIcons();
         };
@@ -1337,7 +1548,6 @@
             renderAll();
         };
 
-        // --- تحويل روابط Google Drive إلى روابط معاينة قابلة للعرض داخل الموقع ---
         function formatEmbeddablePdfUrl(rawUrl) {
             if (!rawUrl) return '';
             const driveMatch = rawUrl.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
@@ -1351,7 +1561,6 @@
             return rawUrl;
         }
 
-        // --- دوال الصفحة الجديدة: الأخبار والاختصارات والشروحات وملفات PDF ---
         window.openAddShortcutModal = function() {
             document.getElementById('shortcutNameInput').value = '';
             document.getElementById('shortcutUrlInput').value = '';
@@ -1368,12 +1577,7 @@
             const desc = document.getElementById('shortcutDescInput').value.trim() || 'رابط سريع للأخبار والأسواق';
             if (!name || !url) return;
 
-            window.appState.shortcuts.unshift({
-                id: Date.now(),
-                name,
-                url,
-                desc
-            });
+            window.appState.shortcuts.unshift({ id: Date.now(), name, url, desc });
             saveState();
             closeAddShortcutModal();
             renderResourcesPage();
@@ -1627,7 +1831,6 @@
             lucide.createIcons();
         }
 
-        // --- باقي دوال سجل الصفقات الأصلية ---
         let capitalDebounceTimer = null;
         window.handleCapitalChange = function(val) {
             const parsed = parseFloat(val);
@@ -1897,11 +2100,10 @@
             document.getElementById('tradeMonthSelect').value = monthKey;
             populateDaysDropdown(monthKey);
             document.getElementById('tradeDaySelect').value = dayStr;
+            switchPage('trades');
             renderMonthTabs();
             renderDayTabs();
             renderTable();
-            renderDailyBreakdown();
-            document.getElementById('tableMonthTitle').scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
 
         window.toggleDaysViewMode = function() {
@@ -2015,10 +2217,15 @@
 
         window.setSymbolFilter = function(symbol) {
             selectedSymbolFilter = symbol;
-            document.getElementById('symbolFilterSelect').value = symbol;
+            const symSel = document.getElementById('symbolFilterSelect');
+            if (symSel) symSel.value = symbol;
             renderTickerScoreboard();
             renderTable();
             renderDailyBreakdown();
+            if (activePage === 'portfolio' && symbol !== 'ALL') {
+                switchPage('trades');
+                showToast(`تم عرض صفقات ${symbol} في السجل`);
+            }
         };
 
         window.setFilter = function(filter) {
@@ -2060,19 +2267,18 @@
         }
 
         function renderMonthTabs() {
-            const container = document.getElementById('monthsTabsContainer');
             const selectEl = document.getElementById('tradeMonthSelect');
-            if (!container || !selectEl) return;
+            if (selectEl) {
+                if (selectEl.options.length === 0) {
+                    selectEl.innerHTML = MONTHS_LIST.map(m => `<option value="${m.key}">${m.label}</option>`).join('');
+                    populateDaysDropdown(selectedMonth === 'ALL' ? '2026-11' : selectedMonth);
+                }
+                if (selectedMonth !== 'ALL') selectEl.value = selectedMonth;
 
-            if (selectEl.options.length === 0) {
-                selectEl.innerHTML = MONTHS_LIST.map(m => `<option value="${m.key}">${m.label}</option>`).join('');
-                populateDaysDropdown(selectedMonth === 'ALL' ? '2026-11' : selectedMonth);
+                const activeMonthObj = MONTHS_LIST.find(m => m.key === selectEl.value);
+                const badgeEl = document.getElementById('addingToMonthBadge');
+                if (badgeEl && activeMonthObj) badgeEl.textContent = activeMonthObj.label;
             }
-            if (selectedMonth !== 'ALL') selectEl.value = selectedMonth;
-
-            const activeMonthObj = MONTHS_LIST.find(m => m.key === selectEl.value);
-            const badgeEl = document.getElementById('addingToMonthBadge');
-            if (badgeEl && activeMonthObj) badgeEl.textContent = activeMonthObj.label;
 
             const allNet = window.appState.trades.reduce((s, t) => s + getTradeNet(t), 0);
             const allActive = selectedMonth === 'ALL';
@@ -2111,25 +2317,35 @@
                     </button>
                 `;
             }).join('');
-            container.innerHTML = html;
+
+            const tradesContainer = document.getElementById('monthsTabsContainer');
+            const portfolioContainer = document.getElementById('portfolioMonthsTabsContainer');
+            if (tradesContainer) tradesContainer.innerHTML = html;
+            if (portfolioContainer) portfolioContainer.innerHTML = html;
         }
 
         function renderDayTabs() {
-            const wrapper = document.getElementById('daysTabsWrapper');
-            const toggleBtn = document.getElementById('daysViewToggleBtn');
-            if (!wrapper) return;
+            const wrappers = [
+                document.getElementById('daysTabsWrapper'),
+                document.getElementById('portfolioDaysTabsWrapper')
+            ].filter(Boolean);
+
+            const toggleBtns = [
+                document.getElementById('daysViewToggleBtn'),
+                document.getElementById('portfolioDaysViewToggleBtn')
+            ].filter(Boolean);
 
             if (selectedMonth === 'ALL') {
-                wrapper.classList.add('hidden');
-                if (toggleBtn) toggleBtn.classList.add('hidden');
+                wrappers.forEach(w => w.classList.add('hidden'));
+                toggleBtns.forEach(b => b.classList.add('hidden'));
                 return;
             }
 
-            wrapper.classList.remove('hidden');
-            if (toggleBtn) {
-                toggleBtn.classList.remove('hidden');
-                toggleBtn.textContent = showAllMonthDays ? 'الأيام النشطة فقط' : `كل أيام الشهر (${getDaysInMonth(selectedMonth)})`;
-            }
+            wrappers.forEach(w => w.classList.remove('hidden'));
+            toggleBtns.forEach(b => {
+                b.classList.remove('hidden');
+                b.textContent = showAllMonthDays ? 'الأيام النشطة فقط' : `كل أيام الشهر (${getDaysInMonth(selectedMonth)})`;
+            });
 
             const totalDays = getDaysInMonth(selectedMonth);
             const monthTrades = window.appState.trades.filter(t => t.month === selectedMonth);
@@ -2160,7 +2376,7 @@
                 `);
             }
 
-            wrapper.innerHTML = `
+            const innerContent = `
                 <div class="flex items-stretch gap-2 overflow-x-auto no-scrollbar pb-0.5">
                     <button onclick="selectDayTab('ALL')"
                         class="flex flex-col items-center justify-center min-w-[76px] px-2.5 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 border ${
@@ -2173,6 +2389,8 @@
                     ${dayCards.length > 0 ? dayCards.join('') : '<div class="flex items-center px-3 text-xs text-slate-500">لا توجد أيام مسجلة في هذا الشهر</div>'}
                 </div>
             `;
+
+            wrappers.forEach(w => { w.innerHTML = innerContent; });
         }
 
         function renderKPIs() {
@@ -2445,6 +2663,8 @@
                         monthShort: mInfo ? mInfo.short : mKey,
                         trades: [],
                         netUSD: 0,
+                        winCount: 0,
+                        lossCount: 0,
                         callCount: 0,
                         callNet: 0,
                         putCount: 0,
@@ -2461,6 +2681,9 @@
                 g.netUSD += net;
                 g.totalContracts += contracts;
                 g.symbolsSet.add(t.symbol || 'SPX');
+
+                if (net > 0) g.winCount++;
+                else if (net < 0) g.lossCount++;
 
                 if (t.type === 'CALL') {
                     g.callCount++;
@@ -2489,15 +2712,6 @@
                 const symbolsBadges = Array.from(g.symbolsSet).map(sym =>
                     `<span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 num-font">${sym}</span>`
                 ).join('');
-
-                let typeSummaryText = '';
-                if (g.callCount > 0 && g.putCount > 0) {
-                    typeSummaryText = `${g.callCount} CALL • ${g.putCount} PUT`;
-                } else if (g.callCount > 0) {
-                    typeSummaryText = `جميعها CALL (${g.callCount})`;
-                } else {
-                    typeSummaryText = `جميعها PUT (${g.putCount})`;
-                }
 
                 return `
                     <div onclick="focusSpecificDay('${g.monthKey}', '${g.dayStr}')"
@@ -2536,12 +2750,30 @@
                             </div>
                         </div>
 
+                        <!-- عدد الصفقات الناجحة والخاسرة -->
+                        <div class="grid grid-cols-2 gap-2 text-[11px] font-extrabold">
+                            <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-300">
+                                <span class="flex items-center gap-1">
+                                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                    <span>ناجحة</span>
+                                </span>
+                                <span class="font-black num-font text-emerald-400">${g.winCount}</span>
+                            </div>
+                            <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-300">
+                                <span class="flex items-center gap-1">
+                                    <i data-lucide="x-circle" class="w-3.5 h-3.5 text-rose-400"></i>
+                                    <span>خاسرة</span>
+                                </span>
+                                <span class="font-black num-font text-rose-400">${g.lossCount}</span>
+                            </div>
+                        </div>
+
                         <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
                             <div class="flex items-center gap-1.5 flex-wrap">
                                 ${g.callCount > 0 ? `<span class="px-2 py-0.5 rounded-md font-black bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 num-font">CALL: ${g.callCount}</span>` : ''}
                                 ${g.putCount > 0 ? `<span class="px-2 py-0.5 rounded-md font-black bg-rose-500/15 text-rose-300 border border-rose-500/25 num-font">PUT: ${g.putCount}</span>` : ''}
                             </div>
-                            <span class="text-slate-400 font-bold num-font" title="${typeSummaryText}">${g.totalContracts} عقد</span>
+                            <span class="text-slate-400 font-bold num-font">${g.totalContracts} عقد</span>
                         </div>
                     </div>
                 `;
@@ -2850,6 +3082,7 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            checkAuthSession();
             loadState();
             document.getElementById('initialCapitalInput').value = window.appState.initialCapital;
             document.getElementById('sarRateInput').value = window.appState.sarRate || 3.75;
@@ -2860,5 +3093,3 @@
     </script>
 </body>
 </html>
-
-```
